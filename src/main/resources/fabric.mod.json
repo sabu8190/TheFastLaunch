@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "fastlaunch",
+  "version": "${version}",
+  "name": "FastLaunch",
+  "description": "Ultra-fast resource loading and startup optimization mod for Minecraft 1.20.1 featuring binary caching, multi-threaded pipelines, and class pre-indexing.",
+  "authors": [
+    "Antigravity"
+  ],
+  "contact": {
+    "homepage": "https://github.com/fastlaunch/fastlaunch",
+    "sources": "https://github.com/fastlaunch/fastlaunch"
+  },
+  "license": "MIT",
+  "icon": "assets/fastlaunch/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.fastlaunch.FastLaunchMod"
+    ],
+    "client": [
+      "com.fastlaunch.FastLaunchMod"
+    ]
+  },
+  "mixins": [
+    "fastlaunch.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "minecraft": "~1.20.1",
+    "java": ">=17"
+  },
+  "suggests": {
+    "sodium": "*"
+  }
+}
