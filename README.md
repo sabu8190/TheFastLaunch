@@ -13,6 +13,17 @@
 
 ---
 
+## 🎬 動作実証・デモ動画 (Demonstration Video)
+
+実際の 200+ ModPack 環境における超爆速起動 ＆ 白画面ゼロ（Zero White Screen）の検証動画です。
+
+[![TheFastLaunch Demonstration Video](https://img.youtube.com/vi/DvaSlmYrUvA/maxresdefault.jpg)](https://www.youtube.com/watch?v=DvaSlmYrUvA)
+*(※ 画像をクリックすると YouTube で高画質再生されます)*
+
+---
+
+---
+
 ## ⚠️ 重要事項・動作環境に関するご注意 (Notice & Requirements)
 
 > [!IMPORTANT]
