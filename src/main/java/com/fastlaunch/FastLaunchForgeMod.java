@@ -35,7 +35,7 @@ public class FastLaunchForgeMod {
         System.setProperty("fml.disableVersionCheck", "true");
 
         // 起動最初期から常時 GLFW イベントポンプを稼働（白画面の完全物理遮断）
-        EarlyProgressWindowPumpThread.startWindowPumping();
+        com.fastlaunch.service.FastLaunchTransformationService.disableWindowsGhosting();
 
         System.out.println("=======================================================================");
         System.out.println(">>> [FastLaunch Core] HIGH PRIORITY INITIALIZATION HOOK LOADED!     <<<");
@@ -146,7 +146,7 @@ public class FastLaunchForgeMod {
 
     private void loadComplete(final FMLLoadCompleteEvent event) {
         RenderThreadStallDetector.updateHeartbeat();
-        EarlyProgressWindowPumpThread.stopWindowPumping();
+        // ITransformationService handles ghosting natively
         FastLaunchSuccessLogger.printSuccessReport();
     }
 
