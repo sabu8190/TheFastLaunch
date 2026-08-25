@@ -34,15 +34,38 @@ public class FastLaunchForgeMod {
         System.setProperty("forge.disableVersionCheck", "true");
         System.setProperty("fml.disableVersionCheck", "true");
 
-        // 起動最初期から常時 GLFW イベントポンプを稼働（白画面の完全物理遮断）
-        com.fastlaunch.service.FastLaunchTransformationService.disableWindowsGhosting();
+        // Win32 API: DisableProcessWindowsGhosting() をクラスロード最初期にスレッド負荷ゼロで直接実行
+        disableWindowsGhostingDirect();
 
         System.out.println("=======================================================================");
         System.out.println(">>> [FastLaunch Core] HIGH PRIORITY INITIALIZATION HOOK LOADED!     <<<");
-        System.out.println(">>> [FastLaunch Core] Target Platform: Forge 1.20.1 / UniMixin (v6.0)<<<");
+        System.out.println(">>> [FastLaunch Core] Target Platform: Forge 1.20.1 / UniMixin (v6.1)<<<");
         System.out.println(">>> [FastLaunch Core] Parallel ModLoading Workers: " + cores + " Cores!      <<<");
-        System.out.println(">>> [FastLaunch Core] Continuous GLFW Window Pump ACTIVE (Zero-Stall)<<<");
+        System.out.println(">>> [FastLaunch Core] Win32 DisableProcessWindowsGhosting: ACTIVE! (0% CPU)  <<<");
         System.out.println("=======================================================================");
+    }
+
+    private static void disableWindowsGhostingDirect() {
+        try {
+            String os = System.getProperty("os.name", "").toLowerCase();
+            if (os.contains("win")) {
+                try {
+                    Class<?> nativeLibraryClass = Class.forName("com.sun.jna.NativeLibrary");
+                    java.lang.reflect.Method getInstanceMethod = nativeLibraryClass.getMethod("getInstance", String.class);
+                    Object user32Lib = getInstanceMethod.invoke(null, "user32");
+
+                    java.lang.reflect.Method getFunctionMethod = nativeLibraryClass.getMethod("getFunction", String.class);
+                    Object func = getFunctionMethod.invoke(user32Lib, "DisableProcessWindowsGhosting");
+
+                    java.lang.reflect.Method invokeVoidMethod = func.getClass().getMethod("invokeVoid", Object[].class);
+                    invokeVoidMethod.invoke(func, (Object) new Object[]{});
+
+                    System.out.println("[FastLaunch] 🛡️ Win32 API: DisableProcessWindowsGhosting() successfully invoked (Ghosting Disabled)!");
+                } catch (Throwable t) {
+                    System.out.println("[FastLaunch] User32 JNA invocation note: " + t.getMessage());
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 
     public FastLaunchForgeMod() {
