@@ -6,7 +6,6 @@
   "refmap": "fastlaunch.refmap.json",
   "mixins": [
     "FilePackResourcesDirectReadMixin",
-    "JeiForgeGuiFastBypassMixin",
     "JeiRuntimeTimerBypassMixin",
     "LoadRegistriesParallelDispatcherMixin",
     "Mbd2FileUtilsMixin",
