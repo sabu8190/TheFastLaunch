@@ -19,8 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * TheFastLaunch 新バージョン自動更新通知エンジン。
- * バックグラウンド非同期（起動負荷0ms）で GitHub の最新バージョンをチェックし、
- * アップデートがある場合にゲーム内チャットで通知。
  */
 public class FastLaunchUpdateNotifier {
     public static final String CURRENT_VERSION = "b1.2";
@@ -32,6 +30,14 @@ public class FastLaunchUpdateNotifier {
     private static final AtomicBoolean NOTIFIED = new AtomicBoolean(false);
     private static volatile String latestVersion = null;
     private static volatile boolean updateAvailable = false;
+
+    public static boolean isUpdateAvailable() {
+        return updateAvailable;
+    }
+
+    public static String getLatestVersion() {
+        return latestVersion != null ? latestVersion : "b1.3";
+    }
 
     public static void checkForUpdatesAsync() {
         if (!CHECK_STARTED.compareAndSet(false, true)) {

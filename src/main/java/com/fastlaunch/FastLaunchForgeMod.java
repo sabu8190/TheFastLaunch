@@ -151,6 +151,7 @@ public class FastLaunchForgeMod {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::loadComplete);
 
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new FastLaunchTitleScreenNotifier());
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
