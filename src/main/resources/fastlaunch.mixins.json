@@ -3,29 +3,27 @@
   "minVersion": "0.8",
   "package": "com.fastlaunch.mixin",
   "compatibilityLevel": "JAVA_17",
-  "refmap": "fastlaunch-refmap.json",
+  "refmap": "fastlaunch.refmap.json",
   "mixins": [
-    "SearchRegistryAsyncBuildMixin",
-    "MultiPackResourceManagerListParallelMixin",
-    "SimpleReloadInstanceFastMixin",
-    "ForgeGuiPluginFastMixin",
-    "SearchRegistryFullBypassMixin",
-    "MultiPackResourceAsyncPumperMixin",
-    "LoadRegistriesParallelDispatcherMixin",
-    "MemorySweepForcedKillerMixin",
-    "ModelReplacementCacheMixin",
-    "SearchTreeFastBypassMixin",
-    "JeiRuntimeTimerBypassMixin",
-    "Mbd2FileUtilsMixin",
-    "ResourceManagerParallelMixin",
     "FilePackResourcesDirectReadMixin",
+    "ForgeGuiPluginFastMixin",
+    "JeiForgeGuiFastBypassMixin",
+    "JeiRuntimeTimerBypassMixin",
+    "LoadRegistriesParallelDispatcherMixin",
+    "Mbd2FileUtilsMixin",
+    "MemorySweepForcedKillerMixin",
     "ModelBakeryParallelWorkerMixin",
-    "JeiForgeGuiFastBypassMixin"
+    "ModelReplacementCacheMixin",
+    "MultiPackResourceAsyncPumperMixin",
+    "MultiPackResourceManagerListParallelMixin",
+    "ResourceManagerParallelMixin",
+    "SearchRegistryAsyncBuildMixin",
+    "SearchRegistryFullBypassMixin",
+    "SearchTreeFastBypassMixin",
+    "SimpleReloadInstanceFastMixin"
   ],
-  "client": [
-    "TitleScreenMixin"
-  ],
+  "client": [],
   "injectors": {
-    "defaultRequire": 0
+    "defaultRequire": 1
   }
 }
