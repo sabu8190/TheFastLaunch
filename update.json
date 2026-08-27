@@ -1,0 +1,10 @@
+{
+  "homepage": "https://github.com/sabu8190/TheFastLaunch",
+  "1.20.1-latest": "b1.2",
+  "1.20.1-recommended": "b1.2",
+  "1.20.1": {
+    "b1.0": "Initial Beta 1.0 Release",
+    "b1.1": "Refactored to ITransformationService Ghost Killer",
+    "b1.2": "Instant World Join & LOAD_REGISTRIES Acceleration"
+  }
+}

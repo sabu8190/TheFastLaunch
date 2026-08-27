@@ -69,6 +69,7 @@ public class FastLaunchForgeMod {
     }
 
     public FastLaunchForgeMod() {
+        FastLaunchUpdateNotifier.checkForUpdatesAsync();
         LOGGER.info("[FastLaunch] ===========================================================");
         LOGGER.info("[FastLaunch] FastLaunch Forge 1.20.1 Core Engine ACTIVE (v6.0 ZERO-STALL)");
         LOGGER.info("[FastLaunch] CREATE_REGISTRIES 69s Accelerator & GLFW Window Pump ACTIVE!");
@@ -181,6 +182,7 @@ public class FastLaunchForgeMod {
 
     @SubscribeEvent
     public void onPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+        FastLaunchUpdateNotifier.notifyPlayerOnWorldJoin();
         LOGGER.info("[FastLaunch/Priority] Player logging into world - activating packet throttler & spawn pipeline.");
         WorldJoinThrottler.setWorldJoining(true);
         SpawnRegionAsyncPipeline.armSpawnPipeline();
