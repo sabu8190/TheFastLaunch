@@ -6,6 +6,8 @@
   "refmap": "fastlaunch.refmap.json",
   "mixins": [
     "FilePackResourcesDirectReadMixin",
+    "ForgeVersionCheckerBypassMixin",
+    "JeiPluginCallerParallelMixin",
     "LoadRegistriesParallelDispatcherMixin",
     "Mbd2FileUtilsMixin",
     "MemorySweepForcedKillerMixin",
@@ -13,6 +15,7 @@
     "ModelReplacementCacheMixin",
     "MultiPackResourceAsyncPumperMixin",
     "ResourceManagerParallelMixin",
+    "ResourcePrewarmParallelMixin",
     "SearchRegistryAsyncBuildMixin",
     "SearchRegistryFullBypassMixin",
     "SearchTreeFastBypassMixin",

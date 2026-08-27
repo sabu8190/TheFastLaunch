@@ -78,6 +78,7 @@ public class FastLaunchForgeMod {
             FantasyEndCacheEngine.initializeFantasyEndCache(gameDir);
             ResourceZipPreExtractCacheEngine.initializeZipCache(gameDir);
             ClassPreloadEngine.startAsyncClassPreloading();
+            ModelBakePreheatEngine.preheatForkJoinPool();
             RenderThreadStallDetector.startMonitoring();
         } catch (Throwable t) {
             LOGGER.debug("[TheFastLaunch] Engine initialization note: {}", t.getMessage());
