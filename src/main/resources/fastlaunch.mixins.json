@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "fastlaunch-refmap.json",
   "mixins": [
+    "LoadRegistriesParallelDispatcherMixin",
+    "MemorySweepForcedKillerMixin",
     "ModelReplacementCacheMixin",
     "SearchTreeFastBypassMixin",
     "JeiRuntimeTimerBypassMixin",
