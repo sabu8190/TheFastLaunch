@@ -15,7 +15,6 @@
     "ModelBakeryParallelWorkerMixin",
     "ModelReplacementCacheMixin",
     "MultiPackResourceAsyncPumperMixin",
-    "MultiPackResourceManagerListParallelMixin",
     "ResourceManagerParallelMixin",
     "SearchRegistryAsyncBuildMixin",
     "SearchRegistryFullBypassMixin",
