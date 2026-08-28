@@ -12,17 +12,24 @@ import org.apache.logging.log4j.Logger;
 import java.net.URI;
 
 /**
- * タイトル画面上にスタイリッシュな TheFastLaunch アップデート通知バナーを描画＆クリック対応。
+ * タイトル画面上に CurseForge と GitHub の両方を選んで開けるスタイリッシュな
+ * TheFastLaunch アップデート通知バナーを描画＆クリック対応。
  */
 public class FastLaunchTitleScreenNotifier {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/TitleNotifier");
-    private static final String RELEASE_URL = "https://github.com/sabu8190/TheFastLaunch/releases";
+    public static final String CURSEFORGE_URL = "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch";
+    public static final String GITHUB_URL = "https://github.com/sabu8190/TheFastLaunch/releases";
 
-    // バナーの描画位置とサイズ
-    private static int bannerX = 10;
-    private static int bannerY = 10;
-    private static int bannerW = 260;
-    private static int bannerH = 22;
+    // バナー全体の描画位置とサイズ
+    private static final int BANNER_X = 10;
+    private static final int BANNER_Y = 10;
+    private static final int BANNER_W = 340;
+    private static final int BANNER_H = 24;
+
+    // ボタンの相対位置
+    // タイトル: 🚀 TheFastLaunch (vX.X)
+    // [CurseForge] ボタン: X = BANNER_X + 185, W = 70, H = 16
+    // [GitHub] ボタン: X = BANNER_X + 260, W = 70, H = 16
 
     @SubscribeEvent
     public void onScreenRender(ScreenEvent.Render.Post event) {
@@ -37,21 +44,43 @@ public class FastLaunchTitleScreenNotifier {
             int mouseX = event.getMouseX();
             int mouseY = event.getMouseY();
 
-            boolean hovered = mouseX >= bannerX && mouseX <= bannerX + bannerW && mouseY >= bannerY && mouseY <= bannerY + bannerH;
+            int btnCfX = BANNER_X + 185;
+            int btnCfY = BANNER_Y + 4;
+            int btnCfW = 70;
+            int btnCfH = 16;
+
+            int btnGhX = BANNER_X + 260;
+            int btnGhY = BANNER_Y + 4;
+            int btnGhW = 70;
+            int btnGhH = 16;
+
+            boolean cfHovered = mouseX >= btnCfX && mouseX <= btnCfX + btnCfW && mouseY >= btnCfY && mouseY <= btnCfY + btnCfH;
+            boolean ghHovered = mouseX >= btnGhX && mouseX <= btnGhX + btnGhW && mouseY >= btnGhY && mouseY <= btnGhY + btnGhH;
 
             // 背景ボックス (ダーク半透明 + シアン/ゴールド枠線)
-            int bgColor = hovered ? 0xEE102030 : 0xCC05101A;
-            int borderColor = hovered ? 0xFF55FFFF : 0xFFFFAA00;
+            graphics.fill(BANNER_X, BANNER_Y, BANNER_X + BANNER_W, BANNER_Y + BANNER_H, 0xEE0A1420);
+            graphics.renderOutline(BANNER_X, BANNER_Y, BANNER_W, BANNER_H, 0xFFFFAA00);
 
-            graphics.fill(bannerX, bannerY, bannerX + bannerW, bannerY + bannerH, bgColor);
-            graphics.renderOutline(bannerX, bannerY, bannerW, bannerH, borderColor);
-
-            // テキスト描画
+            // バナーテキスト
             String latestVer = FastLaunchUpdateNotifier.getLatestVersion();
-            String text = "🚀 TheFastLaunch (v" + latestVer + ") 更新可能! [クリック]";
-            int textColor = hovered ? 0xFFFFFF55 : 0xFF55FFFF;
+            String label = "🚀 TFL (v" + latestVer + ") 更新可能:";
+            graphics.drawString(mc.font, label, BANNER_X + 8, BANNER_Y + 8, 0xFF55FFFF, false);
 
-            graphics.drawString(mc.font, text, bannerX + 8, bannerY + 7, textColor, false);
+            // [CurseForge] ボタン
+            int cfBg = cfHovered ? 0xFFE04E22 : 0xAA802810; // CurseForge オレンジ
+            int cfBorder = cfHovered ? 0xFFFFAA00 : 0xFF888888;
+            int cfText = cfHovered ? 0xFFFFFFFF : 0xFFFFAA88;
+            graphics.fill(btnCfX, btnCfY, btnCfX + btnCfW, btnCfY + btnCfH, cfBg);
+            graphics.renderOutline(btnCfX, btnCfY, btnCfW, btnCfH, cfBorder);
+            graphics.drawCenteredString(mc.font, "CurseForge", btnCfX + (btnCfW / 2), btnCfY + 4, cfText);
+
+            // [GitHub] ボタン
+            int ghBg = ghHovered ? 0xFF238636 : 0xAA10441C; // GitHub グリーン
+            int ghBorder = ghHovered ? 0xFF55FF55 : 0xFF888888;
+            int ghText = ghHovered ? 0xFFFFFFFF : 0xFF88FFAA;
+            graphics.fill(btnGhX, btnGhY, btnGhX + btnGhW, btnGhY + btnGhH, ghBg);
+            graphics.renderOutline(btnGhX, btnGhY, btnGhW, btnGhH, ghBorder);
+            graphics.drawCenteredString(mc.font, "GitHub", btnGhX + (btnGhW / 2), btnGhY + 4, ghText);
         }
     }
 
@@ -65,12 +94,36 @@ public class FastLaunchTitleScreenNotifier {
             double mouseX = event.getMouseX();
             double mouseY = event.getMouseY();
 
-            if (mouseX >= bannerX && mouseX <= bannerX + bannerW && mouseY >= bannerY && mouseY <= bannerY + bannerH) {
+            int btnCfX = BANNER_X + 185;
+            int btnCfY = BANNER_Y + 4;
+            int btnCfW = 70;
+            int btnCfH = 16;
+
+            int btnGhX = BANNER_X + 260;
+            int btnGhY = BANNER_Y + 4;
+            int btnGhW = 70;
+            int btnGhH = 16;
+
+            // CurseForge クリック判定
+            if (mouseX >= btnCfX && mouseX <= btnCfX + btnCfW && mouseY >= btnCfY && mouseY <= btnCfY + btnCfH) {
                 try {
-                    Util.getPlatform().openUri(new URI(RELEASE_URL));
+                    Util.getPlatform().openUri(new URI(CURSEFORGE_URL));
                     event.setCanceled(true);
+                    LOGGER.info("[TitleNotifier] Opened CurseForge release page.");
                 } catch (Throwable t) {
-                    LOGGER.error("Failed to open release URL: " + t.getMessage());
+                    LOGGER.error("Failed to open CurseForge URL: " + t.getMessage());
+                }
+                return;
+            }
+
+            // GitHub クリック判定
+            if (mouseX >= btnGhX && mouseX <= btnGhX + btnGhW && mouseY >= btnGhY && mouseY <= btnGhY + btnGhH) {
+                try {
+                    Util.getPlatform().openUri(new URI(GITHUB_URL));
+                    event.setCanceled(true);
+                    LOGGER.info("[TitleNotifier] Opened GitHub release page.");
+                } catch (Throwable t) {
+                    LOGGER.error("Failed to open GitHub URL: " + t.getMessage());
                 }
             }
         }

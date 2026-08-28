@@ -18,12 +18,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * TheFastLaunch 新バージョン自動更新通知エンジン。
+ * TheFastLaunch 新バージョン自動更新通知エンジン (CurseForge & GitHub デュアルリンク対応)。
  */
 public class FastLaunchUpdateNotifier {
-    public static final String CURRENT_VERSION = "b1.2";
-    private static final String UPDATE_CHECK_URL = "https://raw.githubusercontent.com/sabu8190/TheFastLaunch/main/update.json";
-    private static final String RELEASE_PAGE_URL = "https://github.com/sabu8190/TheFastLaunch/releases";
+    public static final String CURRENT_VERSION = "b1.3";
+    public static final String UPDATE_CHECK_URL = "https://raw.githubusercontent.com/sabu8190/TheFastLaunch/main/update.json";
+    public static final String CURSEFORGE_PAGE_URL = "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch";
+    public static final String GITHUB_RELEASE_URL = "https://github.com/sabu8190/TheFastLaunch/releases";
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/UpdateNotifier");
 
     private static final AtomicBoolean CHECK_STARTED = new AtomicBoolean(false);
@@ -105,14 +106,26 @@ public class FastLaunchUpdateNotifier {
                 msg.append(Component.literal(" [TheFastLaunch] ").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
                 msg.append(Component.literal("🚀 新しいバージョン (v" + latestVersion + ") が利用可能です！\n").withStyle(ChatFormatting.AQUA));
                 
-                MutableComponent clickMsg = Component.literal(" 👉 [ここをクリックして最新版をダウンロード]").withStyle(
+                // CurseForge リンク
+                MutableComponent cfLink = Component.literal(" 👉 [CurseForgeで開く]").withStyle(
                     Style.EMPTY
-                        .withColor(ChatFormatting.YELLOW)
+                        .withColor(ChatFormatting.GOLD)
                         .withUnderlined(true)
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, RELEASE_PAGE_URL))
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, CURSEFORGE_PAGE_URL))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("ブラウザで CurseForge ページを開きます")))
+                );
+
+                // GitHub リンク
+                MutableComponent ghLink = Component.literal("   👉 [GitHubで開く]").withStyle(
+                    Style.EMPTY
+                        .withColor(ChatFormatting.GREEN)
+                        .withUnderlined(true)
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, GITHUB_RELEASE_URL))
                         .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("ブラウザで GitHub Releases を開きます")))
                 );
-                msg.append(clickMsg);
+
+                msg.append(cfLink);
+                msg.append(ghLink);
                 msg.append(Component.literal("\n=====================================================").withStyle(ChatFormatting.DARK_AQUA));
 
                 mc.player.sendSystemMessage(msg);
