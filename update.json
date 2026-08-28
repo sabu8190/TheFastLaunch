@@ -1,13 +1,14 @@
 {
   "homepage": "https://github.com/sabu8190/TheFastLaunch",
   "promos": {
-    "1.20.1-latest": "b1.3",
-    "1.20.1-recommended": "b1.3"
+    "1.20.1-latest": "b1.4",
+    "1.20.1-recommended": "b1.4"
   },
   "1.20.1": {
     "b1.0": "Initial Beta Release - Win32 Ghosting Killer, Multi-Core Resource Loader",
     "b1.1": "MemorySweep GC Killer, JEI GUI Runtime Cache, Title Screen Update Banner",
     "b1.2": "Clean Refactored Core, FancyMenu Compatible Parallel Namespace Cache, Forge Version Checker Bypass",
-    "b1.3": "Integrated Just Enough Freezes (by Misanthropy) & Tinkers' JEI Pre-Filter (by MikhaXOXO) optimizations"
+    "b1.3": "Integrated Just Enough Freezes (by Misanthropy) & Tinkers' JEI Pre-Filter (by MikhaXOXO) optimizations",
+    "b1.4": "Fixed JEMI (JEI + EMI) duplicate overlay rendering bug, clean EMI UI isolation, and stability improvements"
   }
 }
