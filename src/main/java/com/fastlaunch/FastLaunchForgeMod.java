@@ -95,6 +95,7 @@ public class FastLaunchForgeMod {
 
     private void loadComplete(final FMLLoadCompleteEvent event) {
         LOGGER.info("[TheFastLaunch] LoadComplete: All Acceleration Modules Operational!");
+        com.fastlaunch.logging.FastLaunchSuccessLogger.printSuccessReport();
     }
 
     public void onPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
