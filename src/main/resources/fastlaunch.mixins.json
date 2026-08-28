@@ -12,6 +12,7 @@
     "FastLaunchJeiSmartAnvilMixin",
     "FastLaunchJeiSmartGrindstoneMixin",
     "FastLaunchJemiCompatibilityMixin",
+    "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
     "FastLaunchTinkersJeiPrefilterMixin",
     "FilePackResourcesDirectReadMixin",
