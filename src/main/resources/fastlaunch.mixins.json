@@ -7,10 +7,12 @@
   "mixins": [
     "FastLaunchArcaneAnvilOptimizerMixin",
     "FastLaunchBrewingRecipeIndexMixin",
+    "FastLaunchEmiSearchParallelMixin",
     "FastLaunchJeiSearchParallelMixin",
     "FastLaunchJeiSmartAnvilMixin",
     "FastLaunchJeiSmartGrindstoneMixin",
     "FastLaunchJemiCompatibilityMixin",
+    "FastLaunchMekMatterNpeGuardMixin",
     "FastLaunchTinkersJeiPrefilterMixin",
     "FilePackResourcesDirectReadMixin",
     "ForgeVersionCheckerBypassMixin",
