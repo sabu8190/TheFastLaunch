@@ -17,7 +17,7 @@ import java.net.URI;
  */
 public class FastLaunchTitleScreenNotifier {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/TitleNotifier");
-    public static final String CURSEFORGE_URL = "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch";
+    public static final String CURSEFORGE_URL = "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch-tfl";
     public static final String GITHUB_URL = "https://github.com/sabu8190/TheFastLaunch/releases";
 
     // バナー全体の描画位置とサイズ
