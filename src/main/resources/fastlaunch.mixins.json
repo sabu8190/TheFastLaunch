@@ -5,8 +5,11 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "fastlaunch.refmap.json",
   "mixins": [
-    "FastLaunchJeiRecipeMakerOptimizationMixin$AnvilOptimization",
-    "FastLaunchJeiRecipeMakerOptimizationMixin$GrindstoneOptimization",
+    "FastLaunchArcaneAnvilOptimizerMixin",
+    "FastLaunchBrewingRecipeIndexMixin",
+    "FastLaunchJeiSearchParallelMixin",
+    "FastLaunchJeiSmartRecipeFilterMixin$AnvilSmartFilter",
+    "FastLaunchJeiSmartRecipeFilterMixin$GrindstoneSmartFilter",
     "FastLaunchTinkersJeiPrefilterMixin",
     "FilePackResourcesDirectReadMixin",
     "ForgeVersionCheckerBypassMixin",
