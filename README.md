@@ -1,6 +1,6 @@
 <div align="center">
   <img src="icon.png" width="160" height="160" alt="TheFastLaunch Logo" style="border-radius: 24px;" />
-  <h1>🚀 TheFastLaunch (v-b1.2 Beta)</h1>
+  <h1>🚀 TheFastLaunch (v-b1.3 Beta)</h1>
   <p><b>Minecraft 超爆速起動 ＆「応答なし（白画面）」完全根絶・統合最適化 MOD</b><br>
   <i>Built with Google DeepMind Advanced Agentic AI "Antigravity"</i></p>
 </div>
