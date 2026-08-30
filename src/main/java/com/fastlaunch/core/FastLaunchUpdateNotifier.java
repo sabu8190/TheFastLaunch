@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * TheFastLaunch 新バージョン自動更新通知エンジン (CurseForge & GitHub デュアルリンク対応)。
  */
 public class FastLaunchUpdateNotifier {
-    public static final String CURRENT_VERSION = "b1.6";
+    public static final String CURRENT_VERSION = "b1.5";
     public static final String UPDATE_CHECK_URL = "https://raw.githubusercontent.com/sabu8190/TheFastLaunch/main/update.json";
     public static final String CURSEFORGE_PAGE_URL = "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch-tfl";
     public static final String GITHUB_RELEASE_URL = "https://github.com/sabu8190/TheFastLaunch/releases";
@@ -37,7 +37,7 @@ public class FastLaunchUpdateNotifier {
     }
 
     public static String getLatestVersion() {
-        return latestVersion != null ? latestVersion : "b1.3";
+        return latestVersion != null ? latestVersion : CURRENT_VERSION;
     }
 
     public static void checkForUpdatesAsync() {
@@ -70,10 +70,14 @@ public class FastLaunchUpdateNotifier {
                         int start = json.indexOf("\"", idx + key.length()) + 1;
                         int end = json.indexOf("\"", start);
                         if (start > 0 && end > start) {
-                            latestVersion = json.substring(start, end).replace("v-", "").replace("v", "").trim();
-                            if (!CURRENT_VERSION.equalsIgnoreCase(latestVersion) && isNewerVersion(latestVersion, CURRENT_VERSION)) {
+                            String foundVer = json.substring(start, end).replace("v-", "").replace("v", "").trim();
+                            latestVersion = foundVer;
+                            if (isStrictlyNewerVersion(foundVer, CURRENT_VERSION)) {
                                 updateAvailable = true;
                                 LOGGER.info("[UpdateNotifier] 🚀 New update found: TheFastLaunch v{} (Current: v{})", latestVersion, CURRENT_VERSION);
+                            } else {
+                                updateAvailable = false;
+                                LOGGER.info("[UpdateNotifier] ✅ TheFastLaunch is up to date: v{}", CURRENT_VERSION);
                             }
                         }
                     }
@@ -84,14 +88,30 @@ public class FastLaunchUpdateNotifier {
         });
     }
 
-    private static boolean isNewerVersion(String latest, String current) {
-        try {
-            String lNum = latest.replaceAll("[^0-9.]", "");
-            String cNum = current.replaceAll("[^0-9.]", "");
-            return !lNum.equals(cNum);
-        } catch (Exception e) {
+    private static boolean isStrictlyNewerVersion(String latest, String current) {
+        if (latest == null || current == null) return false;
+        String cleanLatest = latest.toLowerCase().replace("b", "").replace("v", "").trim();
+        String cleanCurrent = current.toLowerCase().replace("b", "").replace("v", "").trim();
+
+        if (cleanLatest.equals(cleanCurrent)) {
             return false;
         }
+
+        try {
+            String[] lParts = cleanLatest.split("\\.");
+            String[] cParts = cleanCurrent.split("\\.");
+            int len = Math.max(lParts.length, cParts.length);
+            for (int i = 0; i < len; i++) {
+                int lVal = i < lParts.length ? Integer.parseInt(lParts[i]) : 0;
+                int cVal = i < cParts.length ? Integer.parseInt(cParts[i]) : 0;
+                if (lVal > cVal) return true;
+                if (lVal < cVal) return false;
+            }
+        } catch (Exception e) {
+            // パース失敗時は文字列比較
+            return !cleanLatest.equals(cleanCurrent);
+        }
+        return false;
     }
 
     public static void notifyPlayerOnWorldJoin() {
