@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * TheFastLaunch 新バージョン自動更新通知エンジン (CurseForge & GitHub デュアルリンク対応)。
  */
 public class FastLaunchUpdateNotifier {
-    public static final String CURRENT_VERSION = "b1.5";
+    public static final String CURRENT_VERSION = "b1.5.1";
     public static final String UPDATE_CHECK_URL = "https://raw.githubusercontent.com/sabu8190/TheFastLaunch/main/update.json";
     public static final String CURSEFORGE_PAGE_URL = "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch-tfl";
     public static final String GITHUB_RELEASE_URL = "https://github.com/sabu8190/TheFastLaunch/releases";
