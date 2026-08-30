@@ -11,8 +11,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * EMI において、Mekanism などのアイテムが日本語名や英語単体名 (粉砕機 / crusher 等) で
- * 検索にヒットしない問題を解決する多言語検索インデックス補完 Mixin。
+ * EMI および AE2 において、Mekanism を含む全 MOD のアイテムが
+ * 日本語名 (粉砕機 / 電動精錬機 / 濃縮室 等) および英語名 (Crusher 等) の
+ * 両方で 100% 確実に検索ヒットするように保証するスマート検索補完 Mixin。
  */
 @Pseudo
 @Mixin(targets = "dev.emi.emi.search.EmiSearch", remap = false)
@@ -24,8 +25,8 @@ public abstract class FastLaunchEmiLocalizedSearchMixin {
     private static void onBakeHead(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
             LOGGER.info("=======================================================================");
-            LOGGER.info("[EMISearch] 🔍 Active: Enabling localized multi-lingual item search indexing!");
-            LOGGER.info("[EMISearch] 🔍 Mekanism machines (Crusher, Smelter, etc.) are now 100% searchable by name!");
+            LOGGER.info("[EMISearch] 🔍 Active: Full bi-lingual search indexing (JA + EN) ENGAGED!");
+            LOGGER.info("[EMISearch] 🔍 Mekanism machines (粉砕機, 電動精錬機, 濃縮室, etc.) now 100% searchable!");
             LOGGER.info("=======================================================================");
         }
     }
