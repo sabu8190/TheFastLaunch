@@ -5,9 +5,9 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "fastlaunch.refmap.json",
   "mixins": [
-    "CreateRegistriesParallelDispatcherMixin",
     "FastLaunchArcaneAnvilOptimizerMixin",
     "FastLaunchBrewingRecipeIndexMixin",
+    "FastLaunchCreateRegistriesParallelDispatcherMixin",
     "FastLaunchEmiMekanismNbtCompatMixin",
     "FastLaunchEmiSearchParallelMixin",
     "FastLaunchJeiSearchParallelMixin",
