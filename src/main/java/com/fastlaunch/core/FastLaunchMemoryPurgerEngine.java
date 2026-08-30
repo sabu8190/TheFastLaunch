@@ -4,40 +4,33 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 起動完了時 (LoadComplete) およびワールド接続時に、起動専用の一時キャッシュや
- * 未使用オブジェクトを強制パージし、メモリ (RAM) を 1GB 以上大幅削減する超軽量化エンジン。
+ * タイトル画面到達後のアイドル時に、バックグラウンドで安全に余分なキャッシュを解放する軽量エンジン。
  */
 public class FastLaunchMemoryPurgerEngine {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/MemoryPurger");
-    private static final AtomicBoolean LOAD_COMPLETE_PURGED = new AtomicBoolean(false);
+    private static final AtomicBoolean PURGED = new AtomicBoolean(false);
 
     public static void purgeStartupCachesAsync(String phase) {
-        CompletableFuture.runAsync(() -> {
+        if (!PURGED.compareAndSet(false, true)) {
+            return;
+        }
+
+        // タイトル画面移行後の安全なタイミング (3秒後) にバックグラウンドで1回だけ軽快に実行
+        CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS).execute(() -> {
             try {
                 long beforeMemory = getUsedMemoryMB();
-                LOGGER.info("=======================================================================");
-                LOGGER.info("[MemoryPurger] 🧹 Starting Deep Memory Clean & Cache Purge at phase: {}", phase);
-                LOGGER.info("[MemoryPurger] 📊 Heap Used BEFORE Clean: {} MB", beforeMemory);
-
-                // 1. 各種クラスキャッシュ・一時リソースの解放示唆
+                LOGGER.info("[MemoryPurger] 🧹 Background idle memory optimization active at phase: {}", phase);
                 System.gc();
-                Thread.sleep(100);
-                System.gc();
-
                 long afterMemory = getUsedMemoryMB();
                 long savedMemory = beforeMemory - afterMemory;
-                LOGGER.info("[MemoryPurger] 📊 Heap Used AFTER Clean:  {} MB", afterMemory);
                 if (savedMemory > 0) {
-                    LOGGER.info("[MemoryPurger] ⚡ Successfully RECLAIMED {} MB of RAM!", savedMemory);
-                } else {
-                    LOGGER.info("[MemoryPurger] ⚡ Memory footprint optimized and defragmented!");
+                    LOGGER.info("[MemoryPurger] ⚡ Reclaimed {} MB of RAM without any startup stall!", savedMemory);
                 }
-                LOGGER.info("=======================================================================");
-            } catch (Throwable t) {
-                LOGGER.debug("[MemoryPurger] Clean notice: {}", t.getMessage());
+            } catch (Throwable ignored) {
             }
         });
     }
