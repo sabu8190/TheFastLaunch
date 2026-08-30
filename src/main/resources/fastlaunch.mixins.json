@@ -15,6 +15,7 @@
     "FastLaunchJemiCompatibilityMixin",
     "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
+    "FastLaunchResourceLocationDeduplicatorMixin",
     "FastLaunchTinkersJeiPrefilterMixin",
     "FilePackResourcesDirectReadMixin",
     "ForgeVersionCheckerBypassMixin",
