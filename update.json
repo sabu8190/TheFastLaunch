@@ -1,8 +1,8 @@
 {
   "homepage": "https://github.com/sabu8190/TheFastLaunch",
   "promos": {
-    "1.20.1-latest": "b1.5.1",
-    "1.20.1-recommended": "b1.5.1"
+    "1.20.1-latest": "b1.6",
+    "1.20.1-recommended": "b1.6"
   },
   "1.20.1": {
     "b1.0": "Initial Beta Release - Win32 Ghosting Killer, Multi-Core Resource Loader",
@@ -11,6 +11,7 @@
     "b1.3": "Integrated Just Enough Freezes (by Misanthropy) & Tinkers' JEI Pre-Filter (by MikhaXOXO) optimizations",
     "b1.4": "Fixed JEMI (JEI + EMI) duplicate overlay rendering bug, clean EMI UI isolation, and stability improvements",
     "b1.5": "Deep Memory Footprint Optimizer, Startup Cache Purger (reclaiming 1GB+ RAM), and Mekanism Recipe Matching fix",
-    "b1.5.1": "Critical Hotfix: Resolved dispatching COMPLETE freeze by removing heavy ResourceLocation hook, improved background memory cleanup stability"
+    "b1.5.1": "Critical Hotfix: Resolved dispatching COMPLETE freeze by removing heavy ResourceLocation hook",
+    "b1.6": "Spark Spec Milestone: AdaptiveMemoryGovernor (3-Tier Dynamic Purge), config/fastlaunch.json system, CREATE_REGISTRIES parallel dispatcher"
   }
 }
