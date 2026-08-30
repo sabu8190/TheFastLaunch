@@ -1,17 +1,15 @@
 {
-  "homepage": "https://github.com/sabu8190/TheFastLaunch",
-  "promos": {
-    "1.20.1-latest": "b1.6",
-    "1.20.1-recommended": "b1.6"
+  "homepage": "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch-tfl",
+  "promoted": {
+    "1.20.1-latest": "b1.5",
+    "1.20.1-recommended": "b1.5"
   },
   "1.20.1": {
-    "b1.0": "Initial Beta Release - Win32 Ghosting Killer, Multi-Core Resource Loader",
-    "b1.1": "MemorySweep GC Killer, JEI GUI Runtime Cache, Title Screen Update Banner",
-    "b1.2": "Clean Refactored Core, FancyMenu Compatible Parallel Namespace Cache, Forge Version Checker Bypass",
-    "b1.3": "Integrated Just Enough Freezes (by Misanthropy) & Tinkers' JEI Pre-Filter (by MikhaXOXO) optimizations",
-    "b1.4": "Fixed JEMI (JEI + EMI) duplicate overlay rendering bug, clean EMI UI isolation, and stability improvements",
-    "b1.5": "Deep Memory Footprint Optimizer, Startup Cache Purger (reclaiming 1GB+ RAM), and Mekanism Recipe Matching fix",
-    "b1.5.1": "Critical Hotfix: Resolved dispatching COMPLETE freeze by removing heavy ResourceLocation hook",
-    "b1.6": "Spark Spec Milestone: AdaptiveMemoryGovernor (3-Tier Dynamic Purge), config/fastlaunch.json system, CREATE_REGISTRIES parallel dispatcher"
+    "b1.0": "Initial FastLaunch Release",
+    "b1.1": "Performance and JEI optimizations",
+    "b1.2": "Resource loading & parallelization overhaul",
+    "b1.3": "FancyMenu font & ModelBakery pre-warming",
+    "b1.4": "JEMI & Mekanism stability shields",
+    "b1.5": "Full Spark Integration: 3-Tier Adaptive Memory Governor, config/fastlaunch.json, CREATE_REGISTRIES parallelization, JEMI recipe bridging & full bi-lingual search indexing!"
   }
 }
