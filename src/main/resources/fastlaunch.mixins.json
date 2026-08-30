@@ -13,6 +13,7 @@
     "FastLaunchJeiSmartAnvilMixin",
     "FastLaunchJeiSmartGrindstoneMixin",
     "FastLaunchJemiCompatibilityMixin",
+    "FastLaunchJemiMekanismRecipeBridgeMixin",
     "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
     "FastLaunchTinkersJeiPrefilterMixin",
