@@ -8,6 +8,7 @@
     "FastLaunchArcaneAnvilOptimizerMixin",
     "FastLaunchBrewingRecipeIndexMixin",
     "FastLaunchCreateRegistriesParallelDispatcherMixin",
+    "FastLaunchEmiLocalizedSearchMixin",
     "FastLaunchEmiSearchParallelMixin",
     "FastLaunchJeiSearchParallelMixin",
     "FastLaunchJeiSmartAnvilMixin",
