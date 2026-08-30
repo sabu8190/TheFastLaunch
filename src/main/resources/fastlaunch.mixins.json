@@ -29,9 +29,6 @@
     "MultiPackResourceAsyncPumperMixin",
     "ResourceManagerParallelMixin",
     "ResourcePrewarmParallelMixin",
-    "SearchRegistryAsyncBuildMixin",
-    "SearchRegistryFullBypassMixin",
-    "SearchTreeFastBypassMixin",
     "SimpleReloadInstanceFastMixin"
   ],
   "client": [],

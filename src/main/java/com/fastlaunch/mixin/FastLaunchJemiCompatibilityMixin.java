@@ -10,14 +10,16 @@ import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * JEMI (JEI + EMI 併用) 環境において、EMI がアクティブな場合に
- * JEI の GUI オーバーレイ (アイテムリスト・検索バー・ページネーション) が
- * EMI と重複描画されるのを自動防止し、EMI のみに綺麗に切り替える互換 Mixin。
+ * JEI の GUI 描画（drawScreen / drawOnForeground / drawTooltips）のみ抑制し、
+ * JEI の内部ロジック（isListDisplayed / runtime / レシピ登録）は完全に温存する。
+ *
+ * 重要: isListDisplayed() を false にすると JEI runtime が正常動作しなくなり、
+ * JEMI のレシピ引継ぎや AE2 の JEI 同期検索が完全に壊れるため、絶対に抑制しない。
  */
 @Pseudo
 @Mixin(targets = "mezz.jei.gui.overlay.IngredientListOverlay", remap = false)
@@ -38,34 +40,24 @@ public abstract class FastLaunchJemiCompatibilityMixin {
     }
 
     /**
-     * EMI がロードされている場合、JEI の isListDisplayed() を false にして
-     * JEI 側のリスト表示を完全に抑制する。
-     */
-    @Inject(method = "isListDisplayed", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
-    private void onIsListDisplayed(CallbackInfoReturnable<Boolean> cir) {
-        if (isEmiActive()) {
-            if (LOGGED.compareAndSet(false, true)) {
-                LOGGER.info("=======================================================================");
-                LOGGER.info("[JEMICompat] 🛡️ EMI detected! Suppressed JEI IngredientListOverlay duplicate rendering.");
-                LOGGER.info("[JEMICompat] 🛡️ Seamlessly active: Clean EMI UI only (No UI overlap)!");
-                LOGGER.info("=======================================================================");
-            }
-            cir.setReturnValue(false);
-        }
-    }
-
-    /**
-     * EMI がアクティブな場合、JEI の drawScreen 描画を直接スキップ。
+     * EMI がアクティブな場合、JEI の drawScreen 描画のみスキップ（内部ロジックは温存）。
      */
     @Inject(method = "drawScreen", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void onDrawScreen(Minecraft minecraft, GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
         if (isEmiActive()) {
+            if (LOGGED.compareAndSet(false, true)) {
+                LOGGER.info("=======================================================================");
+                LOGGER.info("[JEMICompat] 🛡️ EMI detected! JEI draw-only suppression active.");
+                LOGGER.info("[JEMICompat] 🛡️ JEI runtime & recipe registration fully preserved!");
+                LOGGER.info("[JEMICompat] 🛡️ JEMI recipe bridging & AE2 JEI-sync search: OPERATIONAL!");
+                LOGGER.info("=======================================================================");
+            }
             ci.cancel();
         }
     }
 
     /**
-     * EMI がアクティブな場合、JEI の drawOnForeground 描画を直接スキップ。
+     * EMI がアクティブな場合、JEI の drawOnForeground 描画のみスキップ。
      */
     @Inject(method = "drawOnForeground", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void onDrawOnForeground(GuiGraphics guiGraphics, int mouseX, int mouseY, CallbackInfo ci) {
@@ -75,7 +67,7 @@ public abstract class FastLaunchJemiCompatibilityMixin {
     }
 
     /**
-     * EMI がアクティブな場合、JEI の ツールチップ描画重複を直接スキップ。
+     * EMI がアクティブな場合、JEI の ツールチップ描画のみスキップ。
      */
     @Inject(method = "drawTooltips", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void onDrawTooltips(Minecraft minecraft, GuiGraphics guiGraphics, int mouseX, int mouseY, CallbackInfo ci) {
@@ -84,3 +76,4 @@ public abstract class FastLaunchJemiCompatibilityMixin {
         }
     }
 }
+
