@@ -4,62 +4,67 @@ import com.fastlaunch.config.FastLaunchConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Spark仕様書準拠: 割り当てメモリ使用率 (used/max) に基づく多段階適応型メモリガバナー
+ * 3段階適応型メモリガバナー (Adaptive Memory Governor)
+ * リアルタイムの JVM ヒープ使用率 (used / max) に応じて動的にキャッシュ解放・GC 介入を行う。
  */
 public class FastLaunchAdaptiveMemoryGovernor {
-    private static final Logger LOGGER = LogManager.getLogger("FastLaunch/AdaptiveMemoryGovernor");
-    private static final AtomicBoolean LOAD_COMPLETE_PURGED = new AtomicBoolean(false);
+    private static final Logger LOGGER = LogManager.getLogger("FastLaunch/AdaptiveGovernor");
+    private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "FastLaunch-AdaptiveGovernorThread");
+        t.setDaemon(true);
+        return t;
+    });
 
-    public static void evaluateAndPurgeAsync(String phase) {
-        CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS).execute(() -> {
+    private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
+    private static volatile long lastPurgeTime = 0;
+
+    public static void start() {
+        if (!INITIALIZED.compareAndSet(false, true)) return;
+
+        SCHEDULER.scheduleWithFixedDelay(() -> {
             try {
+                double warnThreshold = FastLaunchConfig.MEMORY_PURGE_THRESHOLD_PERCENT;
+                double criticalThreshold = FastLaunchConfig.CRITICAL_PURGE_THRESHOLD_PERCENT;
+
                 Runtime rt = Runtime.getRuntime();
-                long maxMemory = rt.maxMemory();
-                long totalMemory = rt.totalMemory();
-                long freeMemory = rt.freeMemory();
-                long usedMemory = totalMemory - freeMemory;
+                long maxMem = rt.maxMemory();
+                long totalMem = rt.totalMemory();
+                long freeMem = rt.freeMemory();
+                long usedMem = totalMem - freeMem;
 
-                double usageRatio = (double) usedMemory / (double) maxMemory;
-                double usagePercent = usageRatio * 100.0;
+                double usedPercent = ((double) usedMem / maxMem) * 100.0;
+                long now = System.currentTimeMillis();
 
-                FastLaunchConfig cfg = FastLaunchConfig.get();
-                double warnThreshold = cfg.memory_purge_threshold_percent;
-                double criticalThreshold = cfg.critical_purge_threshold_percent;
-
-                LOGGER.info("=======================================================================");
-                LOGGER.info("[AdaptiveGovernor] 📊 Memory Evaluation at phase: {}", phase);
-                LOGGER.info("[AdaptiveGovernor] 📊 Heap Used: {} MB / Max: {} MB ({:.1f}%)",
-                        usedMemory / (1024 * 1024), maxMemory / (1024 * 1024), usagePercent);
-
-                if (usagePercent >= criticalThreshold) {
-                    LOGGER.info("[AdaptiveGovernor] 🚨 Level 3 (Critical >= {:.1f}%): Force Deep Purge & Soft-Ref Eviction!", criticalThreshold);
-                    FastLaunchStartupCachePurger.purgeAllCaches();
-                    System.gc();
-                } else if (usagePercent >= warnThreshold) {
-                    LOGGER.info("[AdaptiveGovernor] ⚠️ Level 2 (Warning >= {:.1f}%): Reclaiming startup caches & model buffers...", warnThreshold);
-                    FastLaunchStartupCachePurger.purgeAllCaches();
-                    System.gc();
-                } else {
-                    LOGGER.info("[AdaptiveGovernor] ✅ Level 1 (Normal < {:.1f}%): Memory headroom healthy. Redundant GC suppressed.", warnThreshold);
-                    if (cfg.enable_startup_cache_purge) {
+                if (usedPercent >= criticalThreshold) {
+                    // Level 3: 緊急状態 (Critical)
+                    if (now - lastPurgeTime > 30000) { // 30秒間隔
+                        lastPurgeTime = now;
+                        LOGGER.warn("[AdaptiveGovernor] 🚨 Level 3 Critical Memory Pressure: {:.1f}% used (Threshold: {:.1f}%). Triggering Emergency Eviction & Compaction!", usedPercent, criticalThreshold);
                         FastLaunchStartupCachePurger.purgeAllCaches();
+                        System.gc();
+                    }
+                } else if (usedPercent >= warnThreshold) {
+                    // Level 2: 警告状態 (Warning)
+                    if (now - lastPurgeTime > 60000) { // 60秒間隔
+                        lastPurgeTime = now;
+                        LOGGER.info("[AdaptiveGovernor] 🧹 Level 2 High Memory Pressure: {:.1f}% used (Threshold: {:.1f}%). Reclaiming unused startup buffers...", usedPercent, warnThreshold);
+                        if (FastLaunchConfig.ENABLE_STARTUP_CACHE_PURGE) {
+                            FastLaunchStartupCachePurger.purgeAllCaches();
+                        }
                     }
                 }
-
-                long afterUsed = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
-                long saved = (usedMemory / (1024 * 1024)) - afterUsed;
-                if (saved > 0) {
-                    LOGGER.info("[AdaptiveGovernor] ⚡ Successfully RECLAIMED {} MB of RAM! (Current Used: {} MB)", saved, afterUsed);
-                }
-                LOGGER.info("=======================================================================");
+                // Level 1: 正常運転 (< 80%) -> GC を一切トリガーせずフレームレートを最大維持
             } catch (Throwable t) {
-                LOGGER.debug("[AdaptiveGovernor] Evaluation notice: {}", t.getMessage());
+                LOGGER.debug("[AdaptiveGovernor] Monitoring error: {}", t.getMessage());
             }
-        });
+        }, 10, 15, TimeUnit.SECONDS);
+
+        LOGGER.info("[AdaptiveGovernor] 🚀 3-Tier Adaptive Memory Governor active (Monitoring heap used/max)!");
     }
 }

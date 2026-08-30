@@ -5,6 +5,8 @@ import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -55,6 +57,10 @@ public class FastLaunchForgeMod {
     public FastLaunchForgeMod() {
         com.fastlaunch.config.FastLaunchConfig.load();
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        // Forge 標準 Mods 画面 Config ボタン連携 (ゲーム内 GUI)
+        ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, 
+                () -> new ConfigScreenHandler.ConfigScreenFactory((minecraft, screen) -> new com.fastlaunch.client.gui.FastLaunchConfigScreen(screen)));
+
 
         // ライフサイクルイベント登録
         modEventBus.addListener(this::commonSetup);
