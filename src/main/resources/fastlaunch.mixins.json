@@ -19,6 +19,7 @@
     "FastLaunchJsonThingsParallelMixin",
     "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
+    "FastLaunchObjectHolderMixin",
     "FastLaunchTinkersJeiPrefilterMixin",
     "FilePackResourcesDirectReadMixin",
     "ForgeVersionCheckerBypassMixin",

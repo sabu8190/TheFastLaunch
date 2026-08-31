@@ -25,7 +25,7 @@ import java.io.File;
 public class FastLaunchForgeMod {
     public static final String MOD_ID = "fastlaunch";
     public static final String MOD_NAME = "TheFastLaunch";
-    public static final String VERSION = "b1.8";
+    public static final String VERSION = "b1.9";
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/Core");
 
     static {
@@ -86,6 +86,7 @@ public class FastLaunchForgeMod {
             FantasyEndCacheEngine.initializeFantasyEndCache(gameDir);
             ResourceZipPreExtractCacheEngine.initializeZipCache(gameDir);
             JsonThingsCacheEngine.initializeJsonThingsCache(gameDir);
+            FastLaunchObjectHolderCacheEngine.initializeObjectHolderCache(gameDir);
             ClassPreloadEngine.startAsyncClassPreloading();
             ModelBakePreheatEngine.preheatForkJoinPool();
             RenderThreadStallDetector.startMonitoring();
