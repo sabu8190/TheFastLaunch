@@ -15,6 +15,7 @@
     "FastLaunchJeiSmartGrindstoneMixin",
     "FastLaunchJemiCompatibilityMixin",
     "FastLaunchJemiMekanismRecipeBridgeMixin",
+    "FastLaunchJsonThingsParallelMixin",
     "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
     "FastLaunchTinkersJeiPrefilterMixin",
