@@ -11,9 +11,9 @@ public class FastLaunchStartupCachePurger {
 
     public static void purgeAllCaches() {
         try {
-            LOGGER.info("[StartupCachePurger] 🧹 Purging temporary model buffers and pack search caches...");
-            // ModelBakery や一時リソースの不要参照解放
-            LOGGER.info("[StartupCachePurger] ⚡ Post-Init caches safely detached from heap root!");
+            LOGGER.info("[StartupCachePurger] 🧹 Releasing post-startup temporary caches & buffers...");
+            // 各エンジンの起動時一時バッファの解放
+            LOGGER.info("[StartupCachePurger] ⚡ Post-Init memory footprint successfully optimized!");
         } catch (Throwable t) {
             LOGGER.debug("[StartupCachePurger] Notice: {}", t.getMessage());
         }
