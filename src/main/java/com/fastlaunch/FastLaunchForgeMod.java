@@ -25,7 +25,7 @@ import java.io.File;
 public class FastLaunchForgeMod {
     public static final String MOD_ID = "fastlaunch";
     public static final String MOD_NAME = "TheFastLaunch";
-    public static final String VERSION = "b1.6";
+    public static final String VERSION = "b1.7";
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/Core");
 
     static {
@@ -85,6 +85,7 @@ public class FastLaunchForgeMod {
             RegistrySnapshotCacheEngine.initializeRegistryCache(gameDir);
             FantasyEndCacheEngine.initializeFantasyEndCache(gameDir);
             ResourceZipPreExtractCacheEngine.initializeZipCache(gameDir);
+            JsonThingsCacheEngine.initializeJsonThingsCache(gameDir);
             ClassPreloadEngine.startAsyncClassPreloading();
             ModelBakePreheatEngine.preheatForkJoinPool();
             RenderThreadStallDetector.startMonitoring();
@@ -103,9 +104,11 @@ public class FastLaunchForgeMod {
 
     private void loadComplete(final FMLLoadCompleteEvent event) {
         LOGGER.info("[TheFastLaunch] LoadComplete: All Acceleration Modules Operational!");
+        File gameDir = FMLPaths.GAMEDIR.get().toFile();
         if (FastLaunchConfig.ENABLE_STARTUP_CACHE_PURGE) {
             FastLaunchStartupCachePurger.purgeAllCaches();
         }
+        FastLaunchCacheCleaner.cleanObsoleteCaches(gameDir);
         com.fastlaunch.logging.FastLaunchSuccessLogger.printSuccessReport();
     }
 
