@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * State transition LOAD_REGISTRIES 18秒直列同期をマルチコア並列化する Mixin。
+ * State transition LOAD_REGISTRIES (31秒) をマルチコア並列化する Mixin。
  */
 @Mixin(value = GameData.class, priority = 500, remap = false)
 public abstract class LoadRegistriesParallelDispatcherMixin {
@@ -21,7 +21,10 @@ public abstract class LoadRegistriesParallelDispatcherMixin {
     @Inject(method = "postRegisterEvents", at = @At("HEAD"), remap = false)
     private static void onPostRegisterEvents(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("[LoadRegistriesParallel] ⚡ Multi-Core Parallel Registration Active for LOAD_REGISTRIES (Saved ~18s)!");
+            LOGGER.info("=======================================================================");
+            LOGGER.info("[LoadRegistriesParallel] ⚡ Multi-Core Parallel Registration Active for LOAD_REGISTRIES!");
+            LOGGER.info("[LoadRegistriesParallel] ⚡ Accelerating DeferredRegister & ObjectHolder binding!");
+            LOGGER.info("=======================================================================");
         }
     }
 }

@@ -20,6 +20,8 @@
     "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
     "FastLaunchObjectHolderMixin",
+    "FastLaunchThingParserParallelMixin",
+    "FastLaunchThingResourceManagerMixin",
     "FastLaunchTinkersJeiPrefilterMixin",
     "FilePackResourcesDirectReadMixin",
     "ForgeVersionCheckerBypassMixin",

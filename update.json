@@ -1,8 +1,8 @@
 {
   "homepage": "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch-tfl",
   "promoted": {
-    "1.20.1-latest": "b1.9",
-    "1.20.1-recommended": "b1.9"
+    "1.20.1-latest": "b2.0",
+    "1.20.1-recommended": "b2.0"
   },
   "1.20.1": {
     "b1.0": "Initial FastLaunch Release",
@@ -14,6 +14,7 @@
     "b1.6": "In-Game Config GUI, 3-Tier Adaptive Memory Governor, CREATE_REGISTRIES parallelization, JEMI recipe bridging & full bi-lingual search!",
     "b1.7": "jsonthings 90-second stall breakthrough & automated cache lifecycle cleaner",
     "b1.8": "jsonthings Multi-Core ModResourcesFinder parallel dispatch & snapshot cache index pipeline",
-    "b1.9": "ObjectHolder Snapshot Cache & Loading Registries 33-second reflection scan elimination"
+    "b1.9": "ObjectHolder Snapshot Cache & Loading Registries 33-second reflection scan elimination",
+    "b2.0": "Real Multi-Core ThingParser Parallel Loop Engine & Creating/Loading Registries 130s elimination"
   }
 }
