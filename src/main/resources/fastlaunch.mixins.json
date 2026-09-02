@@ -11,8 +11,6 @@
     "FastLaunchEmiLocalizedSearchMixin",
     "FastLaunchEmiSearchParallelMixin",
     "FastLaunchJeiSearchParallelMixin",
-    "FastLaunchJeiSmartAnvilMixin",
-    "FastLaunchJeiSmartGrindstoneMixin",
     "FastLaunchJemiCompatibilityMixin",
     "FastLaunchJemiMekanismRecipeBridgeMixin",
     "FastLaunchJsonThingsMultiCoreParserMixin",

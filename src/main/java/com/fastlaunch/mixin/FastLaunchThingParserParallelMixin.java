@@ -36,7 +36,7 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
     @Shadow(remap = false)
     public abstract TBuilder parseFromElement(ResourceLocation name, JsonElement element);
 
-    @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void onApplyParallel(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller, CallbackInfo ci) {
         if (map == null || map.isEmpty()) {
             return;

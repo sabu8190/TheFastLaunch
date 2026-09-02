@@ -22,7 +22,7 @@ public abstract class FastLaunchThingResourceManagerMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ThingResourceManager");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
-    @Inject(method = "beginLoading", at = @At("HEAD"), remap = false)
+    @Inject(method = "beginLoading", at = @At("HEAD"), require = 0, remap = false)
     private void onBeginLoading(CallbackInfoReturnable<CompletableFuture<ThingResourceManager>> cir) {
         if (LOGGED.compareAndSet(false, true)) {
             LOGGER.info("=======================================================================");
