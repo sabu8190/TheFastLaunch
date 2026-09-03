@@ -25,7 +25,7 @@ import java.io.File;
 public class FastLaunchForgeMod {
     public static final String MOD_ID = "fastlaunch";
     public static final String MOD_NAME = "TheFastLaunch";
-    public static final String VERSION = "b1.6.1";
+    public static final String VERSION = "b1.6.2";
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/Core");
 
     static {

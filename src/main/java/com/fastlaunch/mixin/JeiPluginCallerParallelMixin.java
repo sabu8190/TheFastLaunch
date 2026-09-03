@@ -22,6 +22,15 @@ import java.util.function.Consumer;
 @Pseudo
 @Mixin(targets = "mezz.jei.library.load.PluginCaller", remap = false)
 public abstract class JeiPluginCallerParallelMixin {
+    private static boolean checkJustEnoughThreads() {
+        try {
+            Class.forName("com.tonywww.jeioptimize.instrumentation.JeiPluginCallContext", false, JeiPluginCallerParallelMixin.class.getClassLoader());
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/JEIParallel");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 

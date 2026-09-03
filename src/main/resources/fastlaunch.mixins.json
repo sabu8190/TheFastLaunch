@@ -37,5 +37,6 @@
   "client": [],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "plugin": "com.fastlaunch.mixin.FastLaunchMixinPlugin"
 }
