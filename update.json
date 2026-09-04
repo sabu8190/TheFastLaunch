@@ -1,8 +1,8 @@
 {
   "homepage": "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch-tfl",
   "promoted": {
-    "1.20.1-latest": "b1.6.2",
-    "1.20.1-recommended": "b1.6.2"
+    "1.20.1-latest": "b1.7",
+    "1.20.1-recommended": "b1.7"
   },
   "1.20.1": {
     "b1.0": "Initial FastLaunch Release",
@@ -11,8 +11,7 @@
     "b1.3": "FancyMenu font & ModelBakery pre-warming",
     "b1.4": "JEMI & Mekanism stability shields",
     "b1.5": "Memory purge fixes and JEI sync stabilization",
-    "b1.6": "Full release consolidating In-Game Config GUI, 3-Tier Adaptive Memory Governor, CREATE_REGISTRIES & LOAD_REGISTRIES parallelization, jsonthings Multi-Core Parser, ObjectHolder Snapshot Cache, JEMI recipe bridging & full bi-lingual search!",
-    "b1.6.1": "HOTFIX: Removed incompatible FastLaunchJeiSmartAnvilMixin and FastLaunchJeiSmartGrindstoneMixin",
-    "b1.6.2": "Compatibility: Auto-detect JustEnoughThreads (jeioptimize) and automatically yield JEI optimization to avoid duplicate hook conflicts!"
+    "b1.6": "In-Game Config GUI, 3-Tier Adaptive Memory Governor, CREATE_REGISTRIES parallelization, JEMI recipe bridging & full bi-lingual search!",
+    "b1.7": "Consolidated Release: JustEnoughThreads smart auto-compatibility, JEI launch crash fixes, jsonthings 100s multi-core parser engine & ObjectHolder snapshot cache!"
   }
 }
