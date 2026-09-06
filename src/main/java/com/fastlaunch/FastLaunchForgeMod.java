@@ -87,6 +87,7 @@ public class FastLaunchForgeMod {
             ResourceZipPreExtractCacheEngine.initializeZipCache(gameDir);
             JsonThingsCacheEngine.initializeJsonThingsCache(gameDir);
             FastLaunchObjectHolderCacheEngine.initializeObjectHolderCache(gameDir);
+        com.fastlaunch.core.FastLaunchTranslationSyncBridge.initialize();
             ClassPreloadEngine.startAsyncClassPreloading();
             ModelBakePreheatEngine.preheatForkJoinPool();
             RenderThreadStallDetector.startMonitoring();

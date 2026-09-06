@@ -15,6 +15,7 @@
     "FastLaunchJemiMekanismRecipeBridgeMixin",
     "FastLaunchJsonThingsMultiCoreParserMixin",
     "FastLaunchJsonThingsParallelMixin",
+    "FastLaunchLanguageSyncMixin",
     "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
     "FastLaunchObjectHolderMixin",
