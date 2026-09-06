@@ -18,6 +18,7 @@
     "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
     "FastLaunchObjectHolderMixin",
+    "FastLaunchSimpleJsonParallelMixin",
     "FastLaunchThingParserParallelMixin",
     "FastLaunchThingResourceManagerMixin",
     "FastLaunchTinkersJeiPrefilterMixin",
