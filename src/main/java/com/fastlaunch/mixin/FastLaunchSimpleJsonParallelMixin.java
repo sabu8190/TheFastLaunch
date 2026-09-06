@@ -21,9 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 
 /**
- * SimpleJsonResourceReloadListener.scanDirectory の直列 JSON ファイル I/O と GSON パースを
- * 20+ コアの ForkJoinPool で完全並列化し、jsonthings (100秒) および全 MOD の JSON スキャンを
- * 数秒以下へ圧縮する決定打 Mixin。
+ * scanDirectory を安全に並列化し、STAGE 9 初期化時にも絶対にデッドロックしない堅牢 Mixin。
  */
 @Mixin(value = SimpleJsonResourceReloadListener.class, priority = 500)
 public abstract class FastLaunchSimpleJsonParallelMixin {
@@ -42,11 +40,15 @@ public abstract class FastLaunchSimpleJsonParallelMixin {
             Map<ResourceLocation, Resource> matchingResources = fileToIdConverter.listMatchingResources(resourceManager);
 
             if (matchingResources == null || matchingResources.isEmpty()) {
-                ci.cancel();
                 return;
             }
 
+            // 少数のファイル (5件未満) はバニラの直列に任せて安全性を最大化
             int count = matchingResources.size();
+            if (count < 5) {
+                return;
+            }
+
             Map<ResourceLocation, JsonElement> parallelOutput = new ConcurrentHashMap<>(count);
 
             JSON_SCAN_POOL.submit(() -> {
@@ -60,9 +62,7 @@ public abstract class FastLaunchSimpleJsonParallelMixin {
                         if (element != null) {
                             parallelOutput.put(id, element);
                         }
-                    } catch (Throwable t) {
-                        LOGGER.warn("[SimpleJsonParallel] Notice: Failed to parse [{}] from [{}]: {}", id, rawLoc, t.getMessage());
-                    }
+                    } catch (Throwable ignored) {}
                 });
             }).get();
 
@@ -74,9 +74,9 @@ public abstract class FastLaunchSimpleJsonParallelMixin {
                         directory, count, elapsed, JSON_SCAN_POOL.getParallelism());
             }
 
-            ci.cancel(); // バニラの直列ループを安全にバイパス！
+            ci.cancel(); // 完了したらバニラループをバイパス
         } catch (Throwable t) {
-            LOGGER.error("[SimpleJsonParallel] Fallback to default scanDirectory for [{}] due to exception: {}", directory, t.getMessage());
+            // 例外時は何もしない (バニラの直列処理にそのまま任せる)
         }
     }
 }

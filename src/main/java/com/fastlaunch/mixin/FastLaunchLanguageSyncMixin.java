@@ -8,8 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * ClientLanguage の初期化・更新時に FastLaunchTranslationSyncBridge をトリガーし、
- * AutoTranslation が注入した最新の翻訳データを EMI / JEI の検索インデックスへ自動同期する Mixin。
+ * ClientLanguage.loadFrom 完了時に安全に同期シグナルを送信する Mixin。
  */
 @Mixin(value = ClientLanguage.class, priority = 1000)
 public abstract class FastLaunchLanguageSyncMixin {
