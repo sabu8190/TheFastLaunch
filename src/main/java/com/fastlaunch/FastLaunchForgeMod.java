@@ -56,6 +56,12 @@ public class FastLaunchForgeMod {
         FastLaunchConfig.load();
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
+        // クライアント単体動作を Forge に明示 (サーバー側に TFL がなくてもマルチサーバー接続を 100% 許可)
+        ModLoadingContext.get().registerExtensionPoint(net.minecraftforge.fml.IExtensionPoint.DisplayTest.class, 
+                () -> new net.minecraftforge.fml.IExtensionPoint.DisplayTest(
+                        () -> net.minecraftforge.fml.IExtensionPoint.DisplayTest.IGNORESERVERONLY, 
+                        (remoteVersion, isFromServer) -> true));
+
         // Forge 標準 Mods 画面 Config ボタン連携 (ゲーム内 GUI)
         ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, 
                 () -> new ConfigScreenHandler.ConfigScreenFactory((minecraft, screen) -> new com.fastlaunch.client.gui.FastLaunchConfigScreen(screen)));
@@ -67,7 +73,9 @@ public class FastLaunchForgeMod {
 
         // Forge イベントバス登録
         MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new FastLaunchTitleScreenNotifier());
+        if (net.minecraftforge.fml.loading.FMLEnvironment.dist.isClient()) {
+            MinecraftForge.EVENT_BUS.register(new FastLaunchTitleScreenNotifier());
+        }
 
         // バックグラウンド自動アップデートチェッカー起動
         FastLaunchUpdateNotifier.checkForUpdatesAsync();

@@ -44,13 +44,19 @@ public abstract class FastLaunchTinkersJeiPrefilterMixin {
 
         int beforeSize = originalList.size();
         List<ItemStack> filtered = new ArrayList<>(beforeSize);
+        java.util.Set<Item> seenItems = new java.util.HashSet<>();
 
         for (ItemStack stack : originalList) {
             if (stack.isEmpty()) continue;
-            // modifiable や parts タグを持つ過剰な動的バリアントをフィルタ
-            if (stack.is(TINKERS_MODIFIABLE) || stack.is(TINKERS_PARTS)) {
-                // デフォルトの1種類目だけ残すか、過剰なNBTバリアントをスキップ
-                if (!stack.hasTag()) {
+
+            Item item = stack.getItem();
+            net.minecraft.resources.ResourceLocation itemId = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item);
+            boolean isVanillaTinkers = itemId != null && "tconstruct".equals(itemId.getNamespace());
+
+            // tconstruct 本体の modifiable / parts のみ過剰バリアントを圧縮し、アドオン (tinkers_katanas 等) は完全保護
+            if (isVanillaTinkers && (stack.is(TINKERS_MODIFIABLE) || stack.is(TINKERS_PARTS))) {
+                // NBT なし、またはそのアイテムの最初の 1 個目なら代表として必ず残す
+                if (!stack.hasTag() || seenItems.add(item)) {
                     filtered.add(stack);
                 }
             } else {

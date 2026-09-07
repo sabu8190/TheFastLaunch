@@ -47,12 +47,14 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
             LOGGER.info("[ThingParserParallel] ⚡ Multi-Core Parallel Parsing started for [{}] ({} JSON files across {} threads)", 
                     this.thingType, map.size(), PARSER_POOL.getParallelism());
 
+            // 元の map のキー順序を厳密に保持してマルチサーバーでの Registry Desync を完全防止
+            java.util.List<ResourceLocation> orderedKeys = new java.util.ArrayList<>(map.keySet());
             Map<ResourceLocation, TBuilder> parsedResults = new ConcurrentHashMap<>();
 
             PARSER_POOL.submit(() -> {
-                map.entrySet().parallelStream().forEach(entry -> {
-                    ResourceLocation name = entry.getKey();
-                    JsonElement json = entry.getValue();
+                orderedKeys.parallelStream().forEach(name -> {
+                    JsonElement json = map.get(name);
+                    if (json == null) return;
                     try {
                         TBuilder builder = parseFromElement(name, json);
                         if (builder != null) {
@@ -64,13 +66,19 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
                 });
             }).get();
 
-            // スレッドセーフにメインマップへ集約
+            // スレッドセーフに、かつ【元のキー順序通りに厳密に整列】してメインマップへ集約！
+            // バニラ直列（サーバー側）と TFL並列（クライアント側）でレジストリ順序・Raw ID が 100% 完全一致
             synchronized (this.buildersByName) {
-                this.buildersByName.putAll(parsedResults);
+                for (ResourceLocation name : orderedKeys) {
+                    TBuilder builder = parsedResults.get(name);
+                    if (builder != null) {
+                        this.buildersByName.put(name, builder);
+                    }
+                }
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
-            LOGGER.info("[ThingParserParallel] ⚡ [{}] Parallel Parsing completed in {} ms (Processed {} items)!", 
+            LOGGER.info("[ThingParserParallel] ⚡ [{}] Deterministic Parallel Parsing completed in {} ms (Processed {} items)!", 
                     this.thingType, elapsed, parsedResults.size());
 
             ci.cancel(); // バニラの直列ループを安全にバイパス！
