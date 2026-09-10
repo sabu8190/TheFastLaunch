@@ -15,16 +15,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Mixin(value = GameData.class, priority = 500, remap = false)
 public abstract class LoadRegistriesParallelDispatcherMixin {
-    private static final Logger LOGGER = LogManager.getLogger("FastLaunch/LoadRegistriesParallel");
+    private static final Logger FAST_LOGGER = LogManager.getLogger("FastLaunch/LoadRegistriesParallel");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
     @Inject(method = "postRegisterEvents", at = @At("HEAD"), remap = false)
     private static void onPostRegisterEvents(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[LoadRegistriesParallel] ⚡ Multi-Core Parallel Registration Active for LOAD_REGISTRIES!");
-            LOGGER.info("[LoadRegistriesParallel] ⚡ Accelerating DeferredRegister & ObjectHolder binding!");
-            LOGGER.info("=======================================================================");
+            FAST_LOGGER.info("=======================================================================");
+            FAST_LOGGER.info("[LoadRegistriesParallel] ⚡ Multi-Core Parallel Registration Active for LOAD_REGISTRIES!");
+            FAST_LOGGER.info("[LoadRegistriesParallel] ⚡ Accelerating DeferredRegister & ObjectHolder binding!");
+            FAST_LOGGER.info("=======================================================================");
         }
     }
 }

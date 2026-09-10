@@ -32,9 +32,10 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
 
     @Shadow(remap = false) @Final private String thingType;
     @Shadow(remap = false) @Final private Map<ResourceLocation, TBuilder> buildersByName;
+    @Shadow(remap = false) @Final private java.util.List<TBuilder> builders;
 
     @Shadow(remap = false)
-    public abstract TBuilder parseFromElement(ResourceLocation name, JsonElement element);
+    protected abstract TBuilder processThing(ResourceLocation name, com.google.gson.JsonObject json, java.util.function.Consumer<TBuilder> consumer);
 
     @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void onApplyParallel(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller, CallbackInfo ci) {
@@ -47,38 +48,54 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
             LOGGER.info("[ThingParserParallel] ⚡ Multi-Core Parallel Parsing started for [{}] ({} JSON files across {} threads)", 
                     this.thingType, map.size(), PARSER_POOL.getParallelism());
 
-            // 元の map のキー順序を厳密に保持してマルチサーバーでの Registry Desync を完全防止
+            // 元の map のキー順序（Deterministic Order）を厳密に保持
             java.util.List<ResourceLocation> orderedKeys = new java.util.ArrayList<>(map.keySet());
             Map<ResourceLocation, TBuilder> parsedResults = new ConcurrentHashMap<>();
 
             PARSER_POOL.submit(() -> {
                 orderedKeys.parallelStream().forEach(name -> {
                     JsonElement json = map.get(name);
-                    if (json == null) return;
+                    if (json == null || !json.isJsonObject()) return;
                     try {
-                        TBuilder builder = parseFromElement(name, json);
+                        if (!ThingParser.parseAndTestConditions(this.thingType, name, json)) {
+                            return;
+                        }
+                        // builders.add() を並列スレッドから呼び出さず、processThing のみを完全並列実行
+                        // これにより ArrayList の並行書き込みによるデータ欠落（fuma_shuriken等）を100%防止
+                        TBuilder builder = this.processThing(name, json.getAsJsonObject(), b -> {});
                         if (builder != null) {
                             parsedResults.put(name, builder);
                         }
                     } catch (Throwable t) {
-                        LOGGER.warn("[ThingParserParallel] Notice: Failed to parse [{}:{}]: {}", this.thingType, name, t.getMessage());
+                        try {
+                            ThingParser.processParseException(this.thingType, name, t);
+                        } catch (Throwable ignored) {
+                            LOGGER.warn("[ThingParserParallel] Notice: Failed to parse [{}:{}]: {}", this.thingType, name, t.getMessage());
+                        }
                     }
                 });
             }).get();
 
-            // スレッドセーフに、かつ【元のキー順序通りに厳密に整列】してメインマップへ集約！
-            // バニラ直列（サーバー側）と TFL並列（クライアント側）でレジストリ順序・Raw ID が 100% 完全一致
+            // スレッドセーフに、かつ【元のキー順序通りに厳密に整列】して
+            // buildersByName と builders の両方を 100% 完全同期！
+            // これにより、ItemParser.register() 等のレジストリ登録フェーズにおいて
+            // サーバー側（直列）とクライアント側（TFL並列）の登録アイテム数・順序・Raw ID が完全一致し、
+            // Tinkers' Katanas 等のマルチサーバー同期欠落（Unidentified mapping）を根底から解消
             synchronized (this.buildersByName) {
-                for (ResourceLocation name : orderedKeys) {
-                    TBuilder builder = parsedResults.get(name);
-                    if (builder != null) {
-                        this.buildersByName.put(name, builder);
+                synchronized (this.builders) {
+                    this.builders.clear();
+                    for (ResourceLocation name : orderedKeys) {
+                        TBuilder builder = parsedResults.get(name);
+                        if (builder != null) {
+                            this.buildersByName.put(name, builder);
+                            this.builders.add(builder);
+                        }
                     }
                 }
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
-            LOGGER.info("[ThingParserParallel] ⚡ [{}] Deterministic Parallel Parsing completed in {} ms (Processed {} items)!", 
+            LOGGER.info("[ThingParserParallel] ⚡ [{}] Deterministic Parallel Parsing completed in {} ms (Processed {} items into builders & buildersByName)!", 
                     this.thingType, elapsed, parsedResults.size());
 
             ci.cancel(); // バニラの直列ループを安全にバイパス！
