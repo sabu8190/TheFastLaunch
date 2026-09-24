@@ -66,10 +66,11 @@ public abstract class FastLaunchTinkersJeiPrefilterMixin {
 
         int removed = beforeSize - filtered.size();
         if (removed > 0 && LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[TinkersPrefilter] 🛡️ Filtered {} excess Tinkers/Addon tool variants from JEI index!", removed);
-            LOGGER.info("[TinkersPrefilter] 🛡️ Slashed memory usage and eliminated world join freeze!");
-            LOGGER.info("=======================================================================");
+            LOGGER.info("[TinkersPrefilter] 🛡️ Filtered {} excess Tinkers/Addon tool variants from JEI index.", removed);
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "TinkersJEI-Prefilter", 
+                    String.format("ACTIVE [Filtered %d excess item variants]", removed)
+            );
         }
 
         return filtered;

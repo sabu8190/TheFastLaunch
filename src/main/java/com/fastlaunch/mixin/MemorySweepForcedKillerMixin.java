@@ -22,10 +22,11 @@ public abstract class MemorySweepForcedKillerMixin {
     @Inject(method = {"sweep", "run", "cleanMemory", "onWorldJoin"}, at = @At("HEAD"), cancellable = true, remap = false)
     private static void onSweep(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[MemorySweepKiller] 🛡️ Neutralized MemorySweep 77s synchronous Full-GC!");
-            LOGGER.info("[MemorySweepKiller] 🛡️ World join lag spike completely ELIMINATED (Saved ~77s)!");
-            LOGGER.info("=======================================================================");
+            LOGGER.info("[MemorySweepKiller] 🛡️ Neutralized MemorySweep synchronous Full-GC on world join.");
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "MemorySweep-GCKiller", 
+                    "ACTIVE [Synchronous Full-GC Cancelled]"
+            );
         }
         ci.cancel();
     }

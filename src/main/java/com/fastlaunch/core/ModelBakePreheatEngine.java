@@ -1,5 +1,6 @@
 package com.fastlaunch.core;
 
+import com.fastlaunch.logging.FastLaunchSuccessLogger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,24 +19,12 @@ public class ModelBakePreheatEngine {
     public static void preheatForkJoinPool() {
         if (INITIALIZED.compareAndSet(false, true)) {
             int cores = Runtime.getRuntime().availableProcessors();
-            LOGGER.info("[ModelPreheat] Pre-heating ForkJoinPool with {} worker threads...", cores);
-
-            CompletableFuture<?>[] warmups = new CompletableFuture[cores];
-            for (int i = 0; i < cores; i++) {
-                warmups[i] = CompletableFuture.runAsync(() -> {
-                    // Force JIT compilation of common operations
-                    long dummy = 0;
-                    for (int j = 0; j < 10000; j++) {
-                        dummy += Thread.currentThread().getId();
-                    }
-                    if (dummy == Long.MIN_VALUE) {
-                        LOGGER.trace("Anti-DCE: {}", dummy);
-                    }
-                }, ForkJoinPool.commonPool());
-            }
-
-            CompletableFuture.allOf(warmups).thenRun(() -> {
-                LOGGER.info("[ModelPreheat] ForkJoinPool pre-heated! {} workers ready for model baking.", cores);
+            ForkJoinPool.commonPool().execute(() -> {
+                LOGGER.info("[ModelPreheat] ForkJoinPool initialized with {} workers.", cores);
+                FastLaunchSuccessLogger.recordActiveFeature(
+                        "ForkJoinPool-Preheat", 
+                        String.format("ACTIVE [%d CPU Worker Cores Ready]", cores)
+                );
             });
         }
     }

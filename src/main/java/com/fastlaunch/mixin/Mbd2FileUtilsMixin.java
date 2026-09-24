@@ -54,9 +54,12 @@ public class Mbd2FileUtilsMixin {
         }).join();
 
         long elapsed = System.currentTimeMillis() - start;
-        System.out.println("[FastLaunch] >>> MBD2 Multi-Core Parallel Loader COMPLETED in " + elapsed + " ms (Saved ~108s)! <<<");
-        LOGGER.info("[MBD2ParallelLoader] Completed {} definitions in {} ms (Accelerated ~108s).", files.length, elapsed);
-        FastLaunchSuccessLogger.recordSavedTime("MBD2-ParallelNBTLoader", 108000L);
+        System.out.println("[FastLaunch] >>> MBD2 Multi-Core Parallel Loader COMPLETED in " + elapsed + " ms! <<<");
+        LOGGER.info("[MBD2ParallelLoader] Completed {} definitions in {} ms across {} threads.", files.length, elapsed, PARALLEL_POOL.getParallelism());
+        FastLaunchSuccessLogger.recordActiveFeature(
+                "MBD2-ParallelNBTLoader", 
+                String.format("ACTIVE [Parsed %d NBT files in %d ms on %d threads]", files.length, elapsed, PARALLEL_POOL.getParallelism())
+        );
 
         ci.cancel();
     }

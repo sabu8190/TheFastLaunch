@@ -20,13 +20,22 @@ public abstract class FastLaunchObjectHolderMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ObjectHolderOpt");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
+    private static long objectHolderStartTime = 0;
+
     @Inject(method = "findObjectHolders", at = @At("HEAD"), require = 0, remap = false)
-    private static void onFindObjectHolders(CallbackInfo ci) {
+    private static void onFindObjectHoldersHead(CallbackInfo ci) {
+        objectHolderStartTime = System.currentTimeMillis();
+    }
+
+    @Inject(method = "findObjectHolders", at = @At("RETURN"), require = 0, remap = false)
+    private static void onFindObjectHoldersReturn(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[ObjectHolderOpt] ⚡ Multi-Core ObjectHolder Fast Injector ENGAGED!");
-            LOGGER.info("[ObjectHolderOpt] ⚡ Bypassing tens of thousands of class reflection scans!");
-            LOGGER.info("=======================================================================");
+            long elapsed = Math.max(0, System.currentTimeMillis() - objectHolderStartTime);
+            LOGGER.info("[ObjectHolderProfiler] ⚡ ObjectHolderRegistry scan completed in {} ms.", elapsed);
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "ObjectHolderScan", 
+                    String.format("ACTIVE [Scanned in %d ms]", elapsed)
+            );
         }
     }
 }

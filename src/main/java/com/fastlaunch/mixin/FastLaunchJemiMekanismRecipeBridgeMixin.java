@@ -29,10 +29,11 @@ public abstract class FastLaunchJemiMekanismRecipeBridgeMixin {
         String className = ingredient.getClass().getName();
         if (className.contains("mekanism") || className.contains("Chemical") || className.contains("Gas") || className.contains("Slurry") || className.contains("Infusion")) {
             if (LOGGED.compareAndSet(false, true)) {
-                LOGGER.info("=======================================================================");
-                LOGGER.info("[JEMIMekBridge] 🛡️ Active: Successfully bridging Mekanism chemicals & machine recipes to EMI!");
-                LOGGER.info("[JEMIMekBridge] 🛡️ Energized Smelter and all machine recipes are now 100% active in EMI!");
-                LOGGER.info("=======================================================================");
+                LOGGER.info("[JEMIMekBridge] 🛡️ Mekanism chemical ingredient detected in JemiUtil stack resolver.");
+                com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                        "JEMI-MekanismResolver", 
+                        "ACTIVE [Chemical Ingredient Resolver Monitored]"
+                );
             }
         }
     }

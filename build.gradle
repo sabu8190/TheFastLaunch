@@ -5,9 +5,9 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7.+'
 }
 
-version = '1.4.0-1.20.1'
+version = 'b1.8.2-1.20.1'
 group = 'com.fastlaunch'
-archivesBaseName = 'fastlaunch'
+archivesBaseName = 'TheFastLaunch'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -50,8 +50,8 @@ tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version: '1.20.1',
             mod_id: 'fastlaunch',
-            mod_name: 'FastLaunch',
-            mod_version: '1.4.0'
+            mod_name: 'TheFastLaunch',
+            mod_version: 'b1.8.2'
     ]
     inputs.properties replaceProperties
 

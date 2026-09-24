@@ -31,6 +31,7 @@ public class ResourceZipPreExtractCacheEngine {
 
         CompletableFuture.runAsync(() -> {
             try {
+                long start = System.currentTimeMillis();
                 File modsDir = new File(gameDir, "mods");
                 File cacheDir = new File(gameDir, CACHE_DIR_NAME);
                 if (!cacheDir.exists()) cacheDir.mkdirs();
@@ -40,10 +41,10 @@ public class ResourceZipPreExtractCacheEngine {
 
                 if (cachedCount > 0) {
                     LOGGER.info("=======================================================================");
-                    LOGGER.info("[ZipCacheEngine] 🎯 CACHE HIT! Detected pre-extracted assets folder (.fastlaunch_extracted_assets)!");
-                    LOGGER.info("[ZipCacheEngine] 🎯 Direct Read Active: Bypassing heavy ZIP decompression on Render thread (Saved ~60s)!");
+                    LOGGER.info("[ZipCacheEngine] 🎯 CACHE HIT! Detected isolated pre-extracted assets ({} JAR directories)!", cachedCount);
+                    LOGGER.info("[ZipCacheEngine] 🎯 Direct Read Active: Streaming assets from per-JAR caches!");
                     LOGGER.info("=======================================================================");
-                    FastLaunchSuccessLogger.recordSavedTime("ZipAsset-PreExtractedDirectRead", 60000L);
+                    FastLaunchSuccessLogger.recordActiveFeature("ZipAsset-PreExtractedDirectRead", "ACTIVE [Isolated JAR Direct Stream]");
                     return;
                 }
 
@@ -56,21 +57,25 @@ public class ResourceZipPreExtractCacheEngine {
                         })
                         .collect(Collectors.toList());
 
-                LOGGER.info("[ZipCacheEngine] Parallel pre-extracting assets for {} heavy mods on {} cores...",
+                LOGGER.info("[ZipCacheEngine] Parallel pre-extracting isolated assets for {} heavy mods on {} cores...",
                         targetJars.size(), EXTRACT_POOL.getParallelism());
 
                 targetJars.parallelStream().forEach(jarPath -> {
+                    File jarCacheDir = new File(cacheDir, jarPath.getFileName().toString());
+                    if (!jarCacheDir.exists()) jarCacheDir.mkdirs();
+
                     try (ZipFile zip = new ZipFile(jarPath.toFile())) {
                         zip.stream().forEach(entry -> {
                             if (!entry.isDirectory() && (entry.getName().startsWith("assets/") || entry.getName().endsWith(".json"))) {
-                                extractEntry(zip, entry, cacheDir);
+                                extractEntry(zip, entry, jarCacheDir);
                             }
                         });
                     } catch (Throwable ignored) {}
                 });
 
-                LOGGER.info("[ZipCacheEngine] 💾 Successfully primed Direct File Assets Cache (Saved ~60s ZIP overhead)!");
-                FastLaunchSuccessLogger.recordSavedTime("ZipAsset-PreExtractedDirectRead", 60000L);
+                long elapsed = System.currentTimeMillis() - start;
+                LOGGER.info("[ZipCacheEngine] 💾 Successfully primed Isolated Direct File Assets Cache in {} ms!", elapsed);
+                FastLaunchSuccessLogger.recordActiveFeature("ZipAsset-PreExtractedDirectRead", String.format("ACTIVE [Extracted %d mods in %d ms]", targetJars.size(), elapsed));
             } catch (Throwable e) {
                 LOGGER.warn("[ZipCacheEngine] Error in asset cache", e);
             }

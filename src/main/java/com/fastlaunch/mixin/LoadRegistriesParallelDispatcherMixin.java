@@ -18,13 +18,22 @@ public abstract class LoadRegistriesParallelDispatcherMixin {
     private static final Logger FAST_LOGGER = LogManager.getLogger("FastLaunch/LoadRegistriesParallel");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
+    private static long postRegisterStartTime = 0;
+
     @Inject(method = "postRegisterEvents", at = @At("HEAD"), remap = false)
-    private static void onPostRegisterEvents(CallbackInfo ci) {
+    private static void onPostRegisterEventsHead(CallbackInfo ci) {
+        postRegisterStartTime = System.currentTimeMillis();
+    }
+
+    @Inject(method = "postRegisterEvents", at = @At("RETURN"), remap = false)
+    private static void onPostRegisterEventsReturn(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            FAST_LOGGER.info("=======================================================================");
-            FAST_LOGGER.info("[LoadRegistriesParallel] ⚡ Multi-Core Parallel Registration Active for LOAD_REGISTRIES!");
-            FAST_LOGGER.info("[LoadRegistriesParallel] ⚡ Accelerating DeferredRegister & ObjectHolder binding!");
-            FAST_LOGGER.info("=======================================================================");
+            long elapsed = Math.max(0, System.currentTimeMillis() - postRegisterStartTime);
+            FAST_LOGGER.info("[LoadRegistriesProfiler] ⚡ GameData postRegisterEvents completed in {} ms.", elapsed);
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "LoadRegistriesStage", 
+                    String.format("ACTIVE [Completed in %d ms]", elapsed)
+            );
         }
     }
 }

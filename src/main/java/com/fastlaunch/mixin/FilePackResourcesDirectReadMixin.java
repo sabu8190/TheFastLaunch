@@ -28,28 +28,34 @@ public abstract class FilePackResourcesDirectReadMixin {
 
     @Inject(method = "getRootResource", at = @At("HEAD"), cancellable = true)
     private void onGetRootResource(String[] path, CallbackInfoReturnable<IoSupplier<InputStream>> cir) {
-        if (CACHE_BASE_DIR.exists() && path.length > 0) {
-            String relativePath = String.join("/", path);
-            File cachedFile = new File(CACHE_BASE_DIR, relativePath);
-            if (cachedFile.exists() && cachedFile.isFile()) {
-                if (LOGGED.compareAndSet(false, true)) {
-                    LOGGER.info("[DirectReadMixin] 🎯 CACHE HIT! Intercepted FilePackResources -> Streaming directly from .fastlaunch_extracted_assets/!");
+        if (this.file != null && CACHE_BASE_DIR.exists() && path.length > 0) {
+            File jarCacheDir = new File(CACHE_BASE_DIR, this.file.getName());
+            if (jarCacheDir.exists() && jarCacheDir.isDirectory()) {
+                String relativePath = String.join("/", path);
+                File cachedFile = new File(jarCacheDir, relativePath);
+                if (cachedFile.exists() && cachedFile.isFile()) {
+                    if (LOGGED.compareAndSet(false, true)) {
+                        LOGGER.info("[DirectReadMixin] 🎯 CACHE HIT! Isolated JAR direct read active for [{}]", this.file.getName());
+                    }
+                    cir.setReturnValue(() -> new FileInputStream(cachedFile));
                 }
-                cir.setReturnValue(() -> new FileInputStream(cachedFile));
             }
         }
     }
 
     @Inject(method = "getResource", at = @At("HEAD"), cancellable = true)
     private void onGetResource(PackType type, ResourceLocation location, CallbackInfoReturnable<IoSupplier<InputStream>> cir) {
-        if (CACHE_BASE_DIR.exists()) {
-            String path = type.getDirectory() + "/" + location.getNamespace() + "/" + location.getPath();
-            File cachedFile = new File(CACHE_BASE_DIR, path);
-            if (cachedFile.exists() && cachedFile.isFile()) {
-                if (LOGGED.compareAndSet(false, true)) {
-                    LOGGER.info("[DirectReadMixin] 🎯 CACHE HIT! Intercepted FilePackResources -> Streaming directly from .fastlaunch_extracted_assets/!");
+        if (this.file != null && CACHE_BASE_DIR.exists()) {
+            File jarCacheDir = new File(CACHE_BASE_DIR, this.file.getName());
+            if (jarCacheDir.exists() && jarCacheDir.isDirectory()) {
+                String path = type.getDirectory() + "/" + location.getNamespace() + "/" + location.getPath();
+                File cachedFile = new File(jarCacheDir, path);
+                if (cachedFile.exists() && cachedFile.isFile()) {
+                    if (LOGGED.compareAndSet(false, true)) {
+                        LOGGER.info("[DirectReadMixin] 🎯 CACHE HIT! Isolated JAR direct read active for [{}]", this.file.getName());
+                    }
+                    cir.setReturnValue(() -> new FileInputStream(cachedFile));
                 }
-                cir.setReturnValue(() -> new FileInputStream(cachedFile));
             }
         }
     }

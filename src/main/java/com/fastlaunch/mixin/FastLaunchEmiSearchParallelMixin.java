@@ -20,13 +20,22 @@ public abstract class FastLaunchEmiSearchParallelMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/EMIOpt");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
+    private static long startTime = 0;
+
     @Inject(method = "bake", at = @At("HEAD"), require = 0, remap = false)
     private static void onBakeHead(CallbackInfo ci) {
+        startTime = System.currentTimeMillis();
+    }
+
+    @Inject(method = "bake", at = @At("RETURN"), require = 0, remap = false)
+    private static void onBakeReturn(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[EMIOpt] ⚡ EMI Recipe Bake Multi-Thread Pipeline ACTIVE!");
-            LOGGER.info("[EMIOpt] ⚡ Accelerating 220,000+ recipe index processing!");
-            LOGGER.info("=======================================================================");
+            long elapsed = Math.max(0, System.currentTimeMillis() - startTime);
+            LOGGER.info("[EMIRecipesProfiler] ⚡ EMI Recipes bake stage completed in {} ms.", elapsed);
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "EMIRecipesBake", 
+                    String.format("ACTIVE [Recipes baked in %d ms]", elapsed)
+            );
         }
     }
 }

@@ -21,13 +21,22 @@ public abstract class FastLaunchEmiLocalizedSearchMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/EMISearch");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
+    private static long startTime = 0;
+
     @Inject(method = "bake", at = @At("HEAD"), require = 0, remap = false)
     private static void onBakeHead(CallbackInfo ci) {
+        startTime = System.currentTimeMillis();
+    }
+
+    @Inject(method = "bake", at = @At("RETURN"), require = 0, remap = false)
+    private static void onBakeReturn(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[EMISearch] 🔍 Active: Full bi-lingual search indexing (JA + EN) ENGAGED!");
-            LOGGER.info("[EMISearch] 🔍 Mekanism machines (粉砕機, 電動精錬機, 濃縮室, etc.) now 100% searchable!");
-            LOGGER.info("=======================================================================");
+            long elapsed = Math.max(0, System.currentTimeMillis() - startTime);
+            LOGGER.info("[EMISearchProfiler] 🔍 EMI Search index baked in {} ms.", elapsed);
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "EMISearchBake", 
+                    String.format("ACTIVE [Index baked in %d ms]", elapsed)
+            );
         }
     }
 }

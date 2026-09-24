@@ -21,11 +21,24 @@ public abstract class FastLaunchArcaneAnvilOptimizerMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ArcaneAnvilOpt");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
+    private static long startTime = 0;
+
     @SuppressWarnings("rawtypes")
     @Inject(method = "setRecipes", at = @At("HEAD"), require = 0, remap = false)
-    private void onSetRecipes(Object builder, Object recipe, Object focuses, CallbackInfo ci) {
+    private void onSetRecipesHead(Object builder, Object recipe, Object focuses, CallbackInfo ci) {
+        startTime = System.currentTimeMillis();
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Inject(method = "setRecipes", at = @At("RETURN"), require = 0, remap = false)
+    private void onSetRecipesReturn(Object builder, Object recipe, Object focuses, CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("[ArcaneAnvilOpt] ⚡ Iron's Spells Arcane Anvil JEI recipe pipeline optimized!");
+            long elapsed = Math.max(0, System.currentTimeMillis() - startTime);
+            LOGGER.info("[ArcaneAnvilProfiler] ⚡ Iron's Spells Arcane Anvil JEI category initialized in {} ms.", elapsed);
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "ArcaneAnvilRecipeCategory", 
+                    String.format("ACTIVE [Initialized in %d ms]", elapsed)
+            );
         }
     }
 }

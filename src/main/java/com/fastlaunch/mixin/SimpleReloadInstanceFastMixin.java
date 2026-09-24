@@ -19,10 +19,22 @@ public abstract class SimpleReloadInstanceFastMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/SimpleReloadFast");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
-    @Inject(method = "done", at = @At("HEAD"))
+    private static long startTime = System.currentTimeMillis();
+
+    @Inject(method = "done", at = @At("RETURN"))
     private void onDone(CallbackInfoReturnable<CompletableFuture<?>> cir) {
-        if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("[SimpleReloadFast] ⚡ SimpleReloadInstance async completion pipeline accelerated (Saved ~70s)!");
+        CompletableFuture<?> future = cir.getReturnValue();
+        if (future != null) {
+            future.thenRun(() -> {
+                if (LOGGED.compareAndSet(false, true)) {
+                    long elapsed = Math.max(0, System.currentTimeMillis() - startTime);
+                    LOGGER.info("[SimpleReloadProfiler] ⚡ SimpleReloadInstance async reload finished in {} ms.", elapsed);
+                    com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                            "SimpleReloadInstance", 
+                            String.format("ACTIVE [Async reload completed in %d ms]", elapsed)
+                    );
+                }
+            });
         }
     }
 }

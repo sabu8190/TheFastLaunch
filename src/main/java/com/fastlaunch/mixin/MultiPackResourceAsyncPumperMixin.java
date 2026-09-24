@@ -26,10 +26,11 @@ public abstract class MultiPackResourceAsyncPumperMixin {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(PackType packType, List<PackResources> packs, CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[MultiPackAsyncPumper] ⚡ Multi-Core Parallel Resource Indexer ACTIVE!");
-            LOGGER.info("[MultiPackAsyncPumper] ⚡ Accelerated 200+ PackResources scan (Saved ~77s)!");
-            LOGGER.info("=======================================================================");
+            LOGGER.info("[MultiPackAsyncPumper] ⚡ MultiPackResourceManager pre-warming namespaces across worker threads.");
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "MultiPackAsyncPumper", 
+                    String.format("ACTIVE [Pre-warmed %d packs]", packs != null ? packs.size() : 0)
+            );
 
             // バックグラウンドで全コア並列展開
             ForkJoinPool.commonPool().submit(() -> {

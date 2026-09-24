@@ -22,13 +22,21 @@ public abstract class FastLaunchThingResourceManagerMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ThingResourceManager");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
-    @Inject(method = "beginLoading", at = @At("HEAD"), require = 0, remap = false)
+    @Inject(method = "beginLoading", at = @At("RETURN"), require = 0, remap = false)
     private void onBeginLoading(CallbackInfoReturnable<CompletableFuture<ThingResourceManager>> cir) {
-        if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[ThingResourceManager] 🚀 Multi-Core Parallel JSON Resource Pipeline ENGAGED!");
-            LOGGER.info("[ThingResourceManager] 🚀 Accelerating all ThingParsers across all CPU cores!");
-            LOGGER.info("=======================================================================");
+        CompletableFuture<ThingResourceManager> future = cir.getReturnValue();
+        if (future != null) {
+            long start = System.currentTimeMillis();
+            future.thenAccept(manager -> {
+                if (LOGGED.compareAndSet(false, true)) {
+                    long elapsed = Math.max(0, System.currentTimeMillis() - start);
+                    LOGGER.info("[ThingResourceManager] 🚀 ThingResourceManager completed loading in {} ms.", elapsed);
+                    com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                            "ThingResourceManager", 
+                            String.format("ACTIVE [Completed in %d ms]", elapsed)
+                    );
+                }
+            });
         }
     }
 }

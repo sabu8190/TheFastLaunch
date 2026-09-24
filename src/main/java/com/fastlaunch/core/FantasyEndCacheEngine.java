@@ -21,12 +21,8 @@ public class FantasyEndCacheEngine {
 
     public static void initializeFantasyEndCache(File gameDir) {
         if (ARMED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[FantasyEndCache] 🎯 CACHE HIT! Parallel Preloader Active for FantasyEnd (com.mega.uom)!");
-            LOGGER.info("[FantasyEndCache] 🎯 Bypassing 98-second synchronous freeze on Render thread!");
-            LOGGER.info("=======================================================================");
-            
             CompletableFuture.runAsync(() -> {
+                long start = System.currentTimeMillis();
                 String[] heavyClasses = new String[]{
                     "com.mega.uom.ModSource",
                     "com.mega.uom.world.biome.FantasyEndBiomes",
@@ -35,14 +31,20 @@ public class FantasyEndCacheEngine {
                     "com.mega.uom.item.FantasyEndItems"
                 };
 
+                int loaded = 0;
                 for (String cls : heavyClasses) {
                     try {
                         Class.forName(cls, true, FantasyEndCacheEngine.class.getClassLoader());
+                        loaded++;
                     } catch (Throwable ignored) {}
                 }
+                long elapsed = Math.max(0, System.currentTimeMillis() - start);
+                LOGGER.info("[FantasyEndPreloader] Pre-loaded {} FantasyEnd classes in {} ms.", loaded, elapsed);
+                FastLaunchSuccessLogger.recordActiveFeature(
+                        "FantasyEnd-Preload", 
+                        String.format("ACTIVE [Pre-loaded %d classes in %d ms]", loaded, elapsed)
+                );
             }, PRELOAD_POOL);
-
-            FastLaunchSuccessLogger.recordSavedTime("FantasyEnd-SnapshotCache", 98000L);
         }
     }
 }

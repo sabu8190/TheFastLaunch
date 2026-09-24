@@ -25,35 +25,38 @@ public class ClassPreloadEngine {
             }
     );
 
-    private static final List<String> HEAVY_PACKAGES = Arrays.asList(
-            "com.mega.uom.common.items",
-            "com.mega.uom.common.blocks",
-            "com.mega.uom.common.items.magic.spell_books",
-            "com.mega.uom.common.items.tools",
-            "com.mega.uom.common.items.template",
-            "com.mega.uom.common.items.skill",
-            "com.simibubi.create",
-            "mekanism.common",
-            "apprenticecodex",
-            "com.lowdragmc.ldlib",
-            "gg.essential"
+    private static final List<String> HEAVY_CLASSES = Arrays.asList(
+            "com.mega.uom.ModSource",
+            "com.mega.uom.world.biome.FantasyEndBiomes",
+            "com.mega.uom.block.FantasyEndBlocks",
+            "com.mega.uom.item.FantasyEndItems",
+            "com.simibubi.create.Create",
+            "mekanism.common.Mekanism",
+            "com.lowdragmc.ldlib.LDLib",
+            "dev.gigaherz.jsonthings.JsonThings"
     );
 
     public static void startAsyncClassPreloading() {
         CompletableFuture.runAsync(() -> {
             long start = System.currentTimeMillis();
-            LOGGER.info("[ClassPreloader] Starting high-speed parallel class preloading for heavy mod packages across multi-cores...");
+            LOGGER.info("[ClassPreloader] Starting parallel class preloading for heavy mod classes across multi-cores...");
 
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            HEAVY_PACKAGES.parallelStream().forEach(pkg -> {
+            java.util.concurrent.atomic.AtomicInteger loadedCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
+            HEAVY_CLASSES.parallelStream().forEach(className -> {
                 try {
-                    Class.forName(pkg, false, cl);
+                    Class.forName(className, false, cl);
+                    loadedCount.incrementAndGet();
                 } catch (Throwable ignored) {}
             });
 
-            long elapsed = System.currentTimeMillis() - start;
-            LOGGER.info("[ClassPreloader] Parallel class cache warmup completed in {} ms (Accelerated ~98s).", elapsed);
-            FastLaunchSuccessLogger.recordSavedTime("ClassWarmup-FantasyEnd-Essential", 98000L);
+            long elapsed = Math.max(0, System.currentTimeMillis() - start);
+            LOGGER.info("[ClassPreloader] Parallel class cache warmup completed in {} ms (Loaded {} classes).", elapsed, loadedCount.get());
+            FastLaunchSuccessLogger.recordActiveFeature(
+                    "ClassPreloader", 
+                    String.format("ACTIVE [Pre-loaded %d mod classes in %d ms]", loadedCount.get(), elapsed)
+            );
         }, PRELOAD_EXECUTOR);
     }
 }

@@ -23,10 +23,11 @@ public abstract class FastLaunchJsonThingsParallelMixin {
     @Inject(method = "<clinit>", at = @At("RETURN"), require = 0, remap = false)
     private static void onClassInit(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[JsonThingsOpt] ⚡ Multi-Core Parallel JsonThings Engine HOOKED!");
-            LOGGER.info("[JsonThingsOpt] ⚡ Accelerating 90-second Dynamic Registry parsing across all CPU cores!");
-            LOGGER.info("=======================================================================");
+            LOGGER.info("[JsonThingsOpt] ⚡ JsonThings core class loaded and hooked.");
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "JsonThings-CoreHook", 
+                    "ACTIVE [JsonThings Hooked for ThingParser Optimization]"
+            );
         }
     }
 }

@@ -19,10 +19,22 @@ public abstract class ModelBakeryParallelWorkerMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ModelBakeryMixin");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
+    private static long startTime = 0;
+
+    @Inject(method = "<init>", at = @At("HEAD"))
+    private void onModelBakeryHead(CallbackInfo ci) {
+        startTime = System.currentTimeMillis();
+    }
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onModelBakeryInit(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("[ModelBakeryMixin] 🎯 ModelBakery Multi-Core Parallel Engine active for all 3D item/block models!");
+            long elapsed = Math.max(0, System.currentTimeMillis() - startTime);
+            LOGGER.info("[ModelBakeryProfiler] 🎯 ModelBakery loaded and baked all models in {} ms.", elapsed);
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "ModelBakery-ModelPipeline", 
+                    String.format("ACTIVE [Baked models in %d ms]", elapsed)
+            );
         }
     }
 }

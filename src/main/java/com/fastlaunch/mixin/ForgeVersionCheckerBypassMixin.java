@@ -24,9 +24,11 @@ public abstract class ForgeVersionCheckerBypassMixin {
     @Inject(method = "startVersionCheck", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private static void onStartVersionCheck(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[VersionBypass] Forge VersionChecker network I/O BYPASSED! (Saved ~5-10s)");
-            LOGGER.info("=======================================================================");
+            LOGGER.info("[VersionBypass] 🚫 Forge VersionChecker network I/O bypassed (Blocking network wait skipped).");
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "ForgeVersionCheckerBypass", 
+                    "ACTIVE [Network Check Cancelled]"
+            );
         }
         ci.cancel();
     }

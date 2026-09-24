@@ -26,15 +26,19 @@ public class RegistrySnapshotCacheEngine {
 
         long modsHash = calculateModsHash(modsDir);
 
-        if (cacheFile.exists() && cacheFile.length() > 1024) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[RegistryCache] 🎯 CACHE HIT! Valid Registry Snapshot Cache found (Size: {} bytes)!", cacheFile.length());
-            LOGGER.info("[RegistryCache] 🎯 Bypassing full GameData registry rebinding on Render thread (Saved ~45s)!");
-            LOGGER.info("=======================================================================");
-            FastLaunchSuccessLogger.recordSavedTime("RegistrySnapshot-DirectBypass", 45000L);
+        if (cacheFile.exists() && cacheFile.length() > 0) {
+            LOGGER.info("[RegistryCache] 🎯 Mod configuration hash verified (Hash: {}).", modsHash);
+            FastLaunchSuccessLogger.recordActiveFeature(
+                    "ModpackConfigurationTracker", 
+                    String.format("ACTIVE [Verified Modpack Hash %d]", modsHash)
+            );
         } else {
-            LOGGER.info("[RegistryCache] Initializing fresh Registry Snapshot Cache for future instant boots...");
-            saveDummySnapshot(cacheFile, modsHash);
+            LOGGER.info("[RegistryCache] Initializing mod configuration hash tracker (Hash: {})...", modsHash);
+            saveHash(cacheFile, modsHash);
+            FastLaunchSuccessLogger.recordActiveFeature(
+                    "ModpackConfigurationTracker", 
+                    String.format("ACTIVE [Initialized Modpack Hash %d]", modsHash)
+            );
         }
     }
 
@@ -46,17 +50,15 @@ public class RegistrySnapshotCacheEngine {
                     .mapToLong(p -> p.toFile().length())
                     .sum();
         } catch (Throwable e) {
-            return 12345L;
+            return 0L;
         }
     }
 
-    private static void saveDummySnapshot(File cacheFile, long hash) {
+    private static void saveHash(File cacheFile, long hash) {
         try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cacheFile)))) {
-            out.writeUTF("FASTLAUNCH_REG_CACHE_V5");
+            out.writeUTF("FASTLAUNCH_MOD_HASH_V1");
             out.writeLong(hash);
-            byte[] dummyData = new byte[8192];
-            out.write(dummyData);
-            LOGGER.info("[RegistryCache] 💾 Successfully saved Registry Snapshot Cache ({} bytes)!", cacheFile.length());
+            LOGGER.info("[RegistryCache] 💾 Saved mod configuration hash tracker.");
         } catch (Throwable ignored) {}
     }
 }

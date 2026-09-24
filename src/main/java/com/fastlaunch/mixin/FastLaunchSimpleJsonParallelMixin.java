@@ -72,6 +72,10 @@ public abstract class FastLaunchSimpleJsonParallelMixin {
             if (count > 50 || elapsed > 100) {
                 LOGGER.info("[SimpleJsonParallel] ⚡ Scanned & parsed [{}] ({} JSON files) in {} ms across {} threads!", 
                         directory, count, elapsed, JSON_SCAN_POOL.getParallelism());
+                com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                        "SimpleJsonParallel", 
+                        String.format("ACTIVE [Parallel JSON Scanner (%d threads)]", JSON_SCAN_POOL.getParallelism())
+                );
             }
 
             ci.cancel(); // 完了したらバニラループをバイパス

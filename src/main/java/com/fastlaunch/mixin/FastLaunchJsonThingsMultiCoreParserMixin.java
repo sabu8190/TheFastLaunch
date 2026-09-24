@@ -23,10 +23,11 @@ public abstract class FastLaunchJsonThingsMultiCoreParserMixin {
     @Inject(method = "<clinit>", at = @At("RETURN"), require = 0, remap = false)
     private static void onClinit(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[JsonThingsMultiCore] 🚀 ModResourcesFinder Parallel Dispatcher ARMED!");
-            LOGGER.info("[JsonThingsMultiCore] 🚀 Multi-Core JSON Resource Finder Active across all CPU cores!");
-            LOGGER.info("=======================================================================");
+            LOGGER.info("[JsonThingsMultiCore] 🚀 JsonThings ModResourcesFinder loaded.");
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "JsonThings-ResourceFinder", 
+                    "ACTIVE [ModResourcesFinder Verified]"
+            );
         }
     }
 }

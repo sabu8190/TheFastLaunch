@@ -23,10 +23,7 @@ public class JsonThingsCacheEngine {
             if (!testCache.exists()) {
                 testCache.createNewFile();
             }
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[JsonThingsCache] 🚀 jsonthings 100s Dynamic Registry Accelerator ACTIVE!");
-            LOGGER.info("[JsonThingsCache] 🚀 Slashing 100s Creating Registries stall down to < 2s!");
-            LOGGER.info("=======================================================================");
+            LOGGER.info("[JsonThingsCache] 🚀 JsonThings cache directory initialized.");
         } catch (Throwable t) {
             LOGGER.debug("[JsonThingsCache] Notice: {}", t.getMessage());
         }

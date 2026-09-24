@@ -97,6 +97,10 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
             long elapsed = System.currentTimeMillis() - startTime;
             LOGGER.info("[ThingParserParallel] ⚡ [{}] Deterministic Parallel Parsing completed in {} ms (Processed {} items into builders & buildersByName)!", 
                     this.thingType, elapsed, parsedResults.size());
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "JsonThings-ParallelParser", 
+                    String.format("ACTIVE [Parallel Deterministic Parsing (%d items in %d ms)]", parsedResults.size(), elapsed)
+            );
 
             ci.cancel(); // バニラの直列ループを安全にバイパス！
         } catch (Throwable t) {

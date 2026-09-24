@@ -18,10 +18,17 @@ public abstract class ModelReplacementCacheMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ModelReplaceCache");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
+    private static final java.util.concurrent.atomic.AtomicInteger topLevelCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
     @Inject(method = "loadTopLevel", at = @At("HEAD"))
     private void onLoadTopLevel(CallbackInfo ci) {
-        if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("[ModelReplaceCache] 🎯 Snapshot Cache active for TopLevel Model Replacements (Saved ~9s)!");
+        int count = topLevelCount.incrementAndGet();
+        if (count == 1) {
+            LOGGER.info("[ModelReplaceProfiler] 🎯 ModelBakery TopLevel model resolution started.");
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "ModelBakery-TopLevelResolution", 
+                    "ACTIVE [TopLevel Model Resolution Monitored]"
+            );
         }
     }
 }

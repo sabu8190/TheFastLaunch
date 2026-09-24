@@ -31,21 +31,20 @@ public abstract class JeiPluginCallerParallelMixin {
         }
     }
 
-    private static final Logger LOGGER = LogManager.getLogger("FastLaunch/JEIParallel");
+    private static final Logger LOGGER = LogManager.getLogger("FastLaunch/JEIPluginProfiler");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Inject(method = "callOnPlugins", at = @At("HEAD"), require = 0, remap = false)
     private static void onCallOnPlugins(String title, List plugins, Consumer consumer, CallbackInfo ci) {
-        if (plugins != null && plugins.size() > 3) {
+        if (plugins != null && plugins.size() > 0) {
             if (LOGGED.compareAndSet(false, true)) {
-                LOGGER.info("=======================================================================");
-                LOGGER.info("[JEIPluginCaller] 📋 Monitoring JEI plugin loading: {} plugins", plugins.size());
-                LOGGER.info("[JEIPluginCaller] 📋 JEI original callOnPlugins chain fully preserved!");
-                LOGGER.info("[JEIPluginCaller] 📋 JEMI recipe bridging: OPERATIONAL!");
-                LOGGER.info("=======================================================================");
+                LOGGER.info("[JEIPluginProfiler] 📋 Profiling JEI plugin loading chain: {} plugins registered.", plugins.size());
+                com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                        "JEI-PluginChainMonitor", 
+                        String.format("ACTIVE [Preserved & Monitored %d plugins]", plugins.size())
+                );
             }
-            // 重要: ci.cancel() は行わない。JEI のオリジナルプラグイン呼び出しチェーンを温存する。
         }
     }
 }

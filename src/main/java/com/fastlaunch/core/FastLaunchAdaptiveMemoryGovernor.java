@@ -66,5 +66,9 @@ public class FastLaunchAdaptiveMemoryGovernor {
         }, 10, 15, TimeUnit.SECONDS);
 
         LOGGER.info("[AdaptiveGovernor] 🚀 3-Tier Adaptive Memory Governor active (Monitoring heap used/max)!");
+        com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                "AdaptiveMemoryGovernor", 
+                "ACTIVE [3-Tier Dynamic Heap Watchdog]"
+        );
     }
 }

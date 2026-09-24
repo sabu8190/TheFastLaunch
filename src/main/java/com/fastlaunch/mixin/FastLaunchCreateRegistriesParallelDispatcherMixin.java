@@ -23,14 +23,26 @@ public abstract class FastLaunchCreateRegistriesParallelDispatcherMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/CreateRegistriesParallel");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
+    private static long createRegistriesStartTime = 0;
+
     @Inject(method = "runEventGenerator", at = @At("HEAD"), require = 0, remap = false)
-    private static void onRunEventGenerator(Object generator, CallbackInfo ci) {
+    private static void onRunEventGeneratorHead(Object generator, CallbackInfo ci) {
+        if (generator != null && generator.toString().contains("CREATE_REGISTRIES")) {
+            createRegistriesStartTime = System.currentTimeMillis();
+            LOGGER.info("[CreateRegistriesProfiler] 🚀 CREATE_REGISTRIES lifecycle stage started.");
+        }
+    }
+
+    @Inject(method = "runEventGenerator", at = @At("RETURN"), require = 0, remap = false)
+    private static void onRunEventGeneratorReturn(Object generator, CallbackInfo ci) {
         if (generator != null && generator.toString().contains("CREATE_REGISTRIES")) {
             if (LOGGED.compareAndSet(false, true)) {
-                LOGGER.info("=======================================================================");
-                LOGGER.info("[CreateRegistriesParallel] 🚀 Multi-Core Parallel Dispatcher Active for CREATE_REGISTRIES!");
-                LOGGER.info("[CreateRegistriesParallel] ⚡ Accelerated 400+ MOD registry frameworks across all CPU cores!");
-                LOGGER.info("=======================================================================");
+                long elapsed = Math.max(0, System.currentTimeMillis() - createRegistriesStartTime);
+                LOGGER.info("[CreateRegistriesProfiler] ⚡ CREATE_REGISTRIES lifecycle stage completed in {} ms.", elapsed);
+                com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                        "CreateRegistriesStage", 
+                        String.format("ACTIVE [Completed in %d ms]", elapsed)
+                );
             }
         }
     }

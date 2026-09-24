@@ -24,10 +24,7 @@ public class FastLaunchObjectHolderCacheEngine {
             if (!cacheFile.exists()) {
                 cacheFile.createNewFile();
             }
-            LOGGER.info("=======================================================================");
-            LOGGER.info("[ObjectHolderCache] 🎯 ObjectHolder Snapshot Cache Pipeline ACTIVE!");
-            LOGGER.info("[ObjectHolderCache] 🎯 Slashing 33s Loading Registries reflection stall down to < 1s!");
-            LOGGER.info("=======================================================================");
+            LOGGER.info("[ObjectHolderCache] 🎯 FastLaunch ObjectHolder directory ready.");
         } catch (Throwable t) {
             LOGGER.debug("[ObjectHolderCache] Notice: {}", t.getMessage());
         }

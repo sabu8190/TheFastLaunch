@@ -25,7 +25,7 @@ import java.io.File;
 public class FastLaunchForgeMod {
     public static final String MOD_ID = "fastlaunch";
     public static final String MOD_NAME = "TheFastLaunch";
-    public static final String VERSION = "b1.8.1";
+    public static final String VERSION = "b1.8.2";
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/Core");
 
     static {
@@ -113,6 +113,7 @@ public class FastLaunchForgeMod {
 
     private void loadComplete(final FMLLoadCompleteEvent event) {
         LOGGER.info("[TheFastLaunch] LoadComplete: All Acceleration Modules Operational!");
+        FastLaunchTranslationSyncBridge.setGameReady();
         File gameDir = FMLPaths.GAMEDIR.get().toFile();
         if (FastLaunchConfig.ENABLE_STARTUP_CACHE_PURGE) {
             FastLaunchStartupCachePurger.purgeAllCaches();
@@ -141,6 +142,10 @@ public class FastLaunchForgeMod {
                     invokeVoidMethod.invoke(func, (Object) new Object[]{});
 
                     LOGGER.info("[TheFastLaunch] 🛡️ Win32 API: DisableProcessWindowsGhosting() successfully invoked (Ghosting Disabled)!");
+                    com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                            "Win32-GhostingKiller", 
+                            "ACTIVE [0% CPU White-Screen Physical Blocker]"
+                    );
                 } catch (Throwable t) {
                     LOGGER.debug("[TheFastLaunch] User32 JNA invocation note: {}", t.getMessage());
                 }
