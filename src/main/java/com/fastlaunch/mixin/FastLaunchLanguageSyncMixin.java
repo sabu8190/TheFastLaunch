@@ -5,7 +5,7 @@ import net.minecraft.client.resources.language.ClientLanguage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * ClientLanguage.loadFrom 完了時に安全に同期シグナルを送信する Mixin。
@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = ClientLanguage.class, priority = 1000)
 public abstract class FastLaunchLanguageSyncMixin {
     @Inject(method = "loadFrom", at = @At("RETURN"), require = 0)
-    private static void onLoadFromReturn(CallbackInfo ci) {
+    private static void onLoadFromReturn(CallbackInfoReturnable<ClientLanguage> cir) {
         FastLaunchTranslationSyncBridge.triggerIndexRebuild("ClientLanguage.loadFrom");
     }
 }
