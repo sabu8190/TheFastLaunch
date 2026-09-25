@@ -5,7 +5,7 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7.+'
 }
 
-version = 'b1.8.2-1.20.1'
+version = 'b1.8.3-1.20.1'
 group = 'com.fastlaunch'
 archivesBaseName = 'TheFastLaunch'
 
@@ -51,7 +51,7 @@ tasks.named('processResources', ProcessResources).configure {
             minecraft_version: '1.20.1',
             mod_id: 'fastlaunch',
             mod_name: 'TheFastLaunch',
-            mod_version: 'b1.8.2'
+            mod_version: 'b1.8.3'
     ]
     inputs.properties replaceProperties
 

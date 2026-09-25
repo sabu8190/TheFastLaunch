@@ -6,7 +6,7 @@ updateJSONURL="https://raw.githubusercontent.com/sabu8190/TheFastLaunch/main/upd
 
 [[mods]]
 modId="fastlaunch"
-version="b1.8.2"
+version="b1.8.3"
 displayName="TheFastLaunch"
 authors="saburou8190, Antigravity Team"
 description="Open-source startup profiler and parallelization utility for Minecraft 1.20.1 Forge."

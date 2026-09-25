@@ -1,6 +1,6 @@
 <div align="center">
   <img src="icon.png" width="160" height="160" alt="TheFastLaunch Logo" style="border-radius: 24px;" />
-  <h1>🚀 TheFastLaunch (v-b1.8.2)</h1>
+  <h1>🚀 TheFastLaunch (v-b1.8.3)</h1>
   <p><b>Minecraft 1.20.1 Forge 向け 起動プロファイリング ＆ パラレル最適化ユーティリティ MOD</b><br>
   <b>Startup Profiling & Parallel Optimization Utility for Minecraft 1.20.1 Forge</b><br>
   <i>Built with Google DeepMind Advanced Agentic AI "Antigravity"</i></p>
@@ -19,7 +19,7 @@
 
 **TheFastLaunch** は、大規模 ModPack（200+ Mod）環境において発生する長大な起動待機時間のボトルネックを特定・プロファイリングし、Windows OS による **「応答なし（白画面 / Ghost Window）」フリーズの防止** や、Mod の並列処理化・キャッシュ最適化を行うオープンソースの最適化・診断 MOD です。
 
-v-b1.8.2 では、すべてのダミー処理・未実測の数値を完全撤去し、**「100% 実測値に基づく正直なプロファイリング」** と **「マルチサーバーとの完全なレジストリ整合性」** を担保する堅牢なアーキテクチャへと刷新されました。
+v-b1.8.3 では、すべてのダミー処理・未実測の数値を完全撤去し、**「100% 実測値に基づく正直なプロファイリング」** と **「マルチサーバーとの完全なレジストリ整合性」** を担保する堅牢なアーキテクチャへと刷新されました。また、Forge 環境で Fabric MOD と誤認される原因となっていた誤混入ファイルを完全排除しました。
 
 ---
 
@@ -89,7 +89,7 @@ Tinkers' Construct などのツール系 Mod が生成する天文学的な組�
 
 **TheFastLaunch** is an open-source startup profiling and optimization mod for Minecraft 1.20.1 Forge. Designed for heavy modpacks (200+ mods), it identifies launch bottlenecks, prevents Windows "Not Responding" ghost windows, parallelizes CPU-bound parsing routines, and optimizes asset streaming.
 
-In **v-b1.8.2**, all unmeasured claims, placeholder routines, and dummy logs have been entirely replaced with **100% measured, microsecond-level profiling** and **deterministic registry synchronization**, ensuring complete stability and zero multiplayer desyncs.
+In **v-b1.8.3**, all unmeasured claims, placeholder routines, and dummy logs have been entirely replaced with **100% measured, microsecond-level profiling** and **deterministic registry synchronization**, ensuring complete stability and zero multiplayer desyncs. Also permanently removes accidental Fabric descriptor files to ensure 100% clean Forge/NeoForge modloader detection.
 
 ---
 

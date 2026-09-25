@@ -1,8 +1,8 @@
 {
   "homepage": "https://www.curseforge.com/minecraft/mc-mods/thefastlaunch-tfl",
   "promoted": {
-    "1.20.1-latest": "b1.8.2",
-    "1.20.1-recommended": "b1.8.2"
+    "1.20.1-latest": "b1.8.3",
+    "1.20.1-recommended": "b1.8.3"
   },
   "1.20.1": {
     "b1.0": "Initial FastLaunch Release",
@@ -15,6 +15,7 @@
     "b1.7": "Consolidated Release: JustEnoughThreads smart auto-compatibility, JEI launch crash fixes, jsonthings multi-core parser engine & ObjectHolder snapshot cache!",
     "b1.8": "Multiplayer Server Independence & Compatibility: Pure client-side operation with DisplayTest.IGNORESERVERONLY, deterministic ThingParser ordering (zero registry desync) and Tinkers addon item protection!",
     "b1.8.1": "Complete Multiplayer Registry Synchronization Fix: Solved race condition on JsonThings ThingParser.builders list, fully synchronizing both builders and buildersByName in deterministic order to ensure all items (like Tinkers' Katanas fuma_shuriken) are registered in Forge and prevent server connection disconnects!",
-    "b1.8.2": "Major Integrity & Diagnostic Refactoring: Completely eliminated unmeasured/hardcoded claims across all modules and replaced them with honest, real-time microsecond-level profiling. Transitioned all placeholder mixins to functional diagnostics and active monitoring. Fixed asset extraction collision across multiple mods by isolating caches per-JAR. Integrated JEI Forge GUI profiling, fully verified 28 mixins and cache purgers with real-time heap metrics."
+    "b1.8.2": "Major Integrity & Diagnostic Refactoring: Completely eliminated unmeasured/hardcoded claims across all modules and replaced them with honest, real-time microsecond-level profiling. Transitioned all placeholder mixins to functional diagnostics and active monitoring. Fixed asset extraction collision across multiple mods by isolating caches per-JAR. Integrated JEI Forge GUI profiling, fully verified 28 mixins and cache purgers with real-time heap metrics.",
+    "b1.8.3": "Emergency Hotfix: Removed accidental fabric.mod.json that caused Forge Mod Loader and modpack launchers to misidentify TheFastLaunch as an incompatible Fabric mod."
   }
 }
