@@ -51,7 +51,7 @@ tasks.named('processResources', ProcessResources).configure {
             minecraft_version: '1.20.1',
             mod_id: 'fastlaunch',
             mod_name: 'TheFastLaunch',
-            mod_version: 'b1.8.3'
+            mod_version: '1.8.3'
     ]
     inputs.properties replaceProperties
 
