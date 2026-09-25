@@ -28,7 +28,12 @@ import java.util.concurrent.ForkJoinPool;
 @Mixin(value = ThingParser.class, remap = false)
 public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBuilder<?, TBuilder>> {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ThingParserParallel");
-    private static final ForkJoinPool PARSER_POOL = new ForkJoinPool(Math.min(32, Math.max(4, Runtime.getRuntime().availableProcessors() * 2)));
+    private static final ForkJoinPool PARSER_POOL = new ForkJoinPool(
+            Math.min(32, Math.max(4, Runtime.getRuntime().availableProcessors() * 2)),
+            com.fastlaunch.core.FastLaunchThreadHelper.createSafeFactory("FastLaunch-JsonThingsWorker"),
+            null,
+            false
+    );
 
     @Shadow(remap = false) @Final private String thingType;
     @Shadow(remap = false) @Final private Map<ResourceLocation, TBuilder> buildersByName;

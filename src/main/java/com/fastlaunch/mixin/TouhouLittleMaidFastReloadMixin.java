@@ -23,7 +23,12 @@ import java.util.zip.ZipFile;
 @Mixin(targets = "com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader", remap = false)
 public abstract class TouhouLittleMaidFastReloadMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/MaidFastLoader");
-    private static final ForkJoinPool MAID_POOL = new ForkJoinPool(Math.min(16, Math.max(4, Runtime.getRuntime().availableProcessors())));
+    private static final ForkJoinPool MAID_POOL = new ForkJoinPool(
+            Math.min(16, Math.max(4, Runtime.getRuntime().availableProcessors())),
+            com.fastlaunch.core.FastLaunchThreadHelper.createSafeFactory("FastLaunch-MaidWorker"),
+            null,
+            false
+    );
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
     @Shadow(remap = false)

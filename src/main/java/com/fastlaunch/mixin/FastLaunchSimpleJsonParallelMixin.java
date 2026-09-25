@@ -26,7 +26,12 @@ import java.util.concurrent.ForkJoinPool;
 @Mixin(value = SimpleJsonResourceReloadListener.class, priority = 500)
 public abstract class FastLaunchSimpleJsonParallelMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/SimpleJsonParallel");
-    private static final ForkJoinPool JSON_SCAN_POOL = new ForkJoinPool(Math.min(32, Math.max(4, Runtime.getRuntime().availableProcessors() * 2)));
+    private static final ForkJoinPool JSON_SCAN_POOL = new ForkJoinPool(
+            Math.min(32, Math.max(4, Runtime.getRuntime().availableProcessors() * 2)),
+            com.fastlaunch.core.FastLaunchThreadHelper.createSafeFactory("FastLaunch-JsonScanWorker"),
+            null,
+            false
+    );
 
     @Inject(method = "scanDirectory", at = @At("HEAD"), cancellable = true)
     private static void onScanDirectoryParallel(ResourceManager resourceManager, String directory, Gson gson, Map<ResourceLocation, JsonElement> output, CallbackInfo ci) {
