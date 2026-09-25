@@ -37,8 +37,13 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
     @Shadow(remap = false)
     protected abstract TBuilder processThing(ResourceLocation name, com.google.gson.JsonObject json, java.util.function.Consumer<TBuilder> consumer);
 
-    @Inject(method = "apply(Ljava/util/Map;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
-    private void onApplyParallel(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller, CallbackInfo ci) {
+    @Inject(method = {"apply", "m_5787_"}, at = @At("HEAD"), cancellable = true, require = 0, remap = false)
+    private void onApplyParallel(Object mapObj, ResourceManager resourceManager, ProfilerFiller profilerFiller, CallbackInfo ci) {
+        if (!(mapObj instanceof Map)) {
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        Map<ResourceLocation, JsonElement> map = (Map<ResourceLocation, JsonElement>) mapObj;
         if (map == null || map.isEmpty()) {
             return;
         }

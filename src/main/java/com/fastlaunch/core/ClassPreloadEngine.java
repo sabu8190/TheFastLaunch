@@ -26,12 +26,40 @@ public class ClassPreloadEngine {
     );
 
     private static final List<String> HEAVY_CLASSES = Arrays.asList(
+            // FantasyEnd & Mega UOM
             "com.mega.uom.ModSource",
             "com.mega.uom.world.biome.FantasyEndBiomes",
             "com.mega.uom.block.FantasyEndBlocks",
             "com.mega.uom.item.FantasyEndItems",
+            // Youkais Homecoming (Caused 5s stall on YHBlocks.<clinit>)
+            "dev.xkmc.youkaishomecoming.init.registrate.YHBlocks",
+            "dev.xkmc.youkaishomecoming.init.registrate.YHItems",
+            "dev.xkmc.youkaishomecoming.init.YoukaisHomecoming",
+            // Goety (16s construction)
+            "com.polarice3.goety.Goety",
+            "com.polarice3.goety.common.blocks.ModBlocks",
+            "com.polarice3.goety.common.items.ModItems",
+            // CraftTweaker (15s construction)
+            "com.blamejared.crafttweaker.CraftTweaker",
+            // Touhou Little Maid
+            "com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid",
+            // Tinkers' Construct (11s construction)
+            "slimeknights.tconstruct.TConstruct",
+            "slimeknights.tconstruct.shared.TinkerCommons",
+            "slimeknights.tconstruct.tools.TinkerModifiers",
+            // Immersive Engineering (8s construction)
+            "blusunrize.immersiveengineering.ImmersiveEngineering",
+            // Cataclysm
+            "com.github.L_Ender.cataclysm.Cataclysm",
+            // Create & Addons
             "com.simibubi.create.Create",
+            "com.simibubi.create.AllBlocks",
+            "com.simibubi.create.AllItems",
+            // Mekanism
             "mekanism.common.Mekanism",
+            "mekanism.common.registries.MekanismBlocks",
+            "mekanism.common.registries.MekanismItems",
+            // LDLib & JsonThings
             "com.lowdragmc.ldlib.LDLib",
             "dev.gigaherz.jsonthings.JsonThings"
     );

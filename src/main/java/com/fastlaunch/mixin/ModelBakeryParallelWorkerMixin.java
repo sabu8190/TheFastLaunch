@@ -26,6 +26,22 @@ public abstract class ModelBakeryParallelWorkerMixin {
         startTime = System.currentTimeMillis();
     }
 
+    @Inject(method = "loadBlockModel", at = @At("HEAD"), cancellable = true, require = 0)
+    private void onLoadBlockModelHead(net.minecraft.resources.ResourceLocation location, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.client.renderer.block.model.BlockModel> cir) {
+        net.minecraft.client.renderer.block.model.BlockModel cached = com.fastlaunch.core.ModelAstCacheEngine.getCachedModel(location);
+        if (cached != null) {
+            cir.setReturnValue(cached);
+        }
+    }
+
+    @Inject(method = "loadBlockModel", at = @At("RETURN"), require = 0)
+    private void onLoadBlockModelReturn(net.minecraft.resources.ResourceLocation location, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.client.renderer.block.model.BlockModel> cir) {
+        net.minecraft.client.renderer.block.model.BlockModel model = cir.getReturnValue();
+        if (model != null) {
+            com.fastlaunch.core.ModelAstCacheEngine.putCachedModel(location, model);
+        }
+    }
+
     @Inject(method = "bakeModels", at = @At("RETURN"), require = 0)
     private void onBakeModelsReturn(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
@@ -35,6 +51,7 @@ public abstract class ModelBakeryParallelWorkerMixin {
                     "ModelBakery-ModelPipeline", 
                     String.format("ACTIVE [Baked models in %d ms]", elapsed)
             );
+            com.fastlaunch.core.ModelAstCacheEngine.reportCacheStats();
         }
     }
 }

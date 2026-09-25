@@ -39,4 +39,14 @@ public abstract class FastLaunchThingResourceManagerMixin {
             });
         }
     }
+
+    @Inject(method = "waitForLoading", at = @At("HEAD"), require = 0, remap = false)
+    private void onWaitForLoadingHead(CompletableFuture<ThingResourceManager> future, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        LOGGER.info("[ThingResourceManager] ⏳ Main thread entered waitForLoading for JsonThings...");
+    }
+
+    @Inject(method = "waitForLoading", at = @At("RETURN"), require = 0, remap = false)
+    private void onWaitForLoadingReturn(CompletableFuture<ThingResourceManager> future, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+        LOGGER.info("[ThingResourceManager] ⚡ Main thread resumed after JsonThings completed loading!");
+    }
 }

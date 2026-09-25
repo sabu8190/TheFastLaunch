@@ -35,7 +35,8 @@
     "MultiPackResourceAsyncPumperMixin",
     "ResourceManagerParallelMixin",
     "ResourcePrewarmParallelMixin",
-    "SimpleReloadInstanceFastMixin"
+    "SimpleReloadInstanceFastMixin",
+    "TouhouLittleMaidFastReloadMixin"
   ],
   "client": [],
   "injectors": {

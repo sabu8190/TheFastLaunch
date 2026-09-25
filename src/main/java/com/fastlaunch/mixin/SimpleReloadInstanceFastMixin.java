@@ -18,10 +18,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class SimpleReloadInstanceFastMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/SimpleReloadFast");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
-
     private static long startTime = System.currentTimeMillis();
 
-    @Inject(method = "done", at = @At("RETURN"))
+    @org.spongepowered.asm.mixin.injection.ModifyVariable(
+            method = "create",
+            at = @At("HEAD"),
+            argsOnly = true,
+            ordinal = 0,
+            require = 0
+    )
+    private static java.util.concurrent.Executor onModifyBackgroundExecutor(java.util.concurrent.Executor original) {
+        return com.fastlaunch.core.ReloadManagerGovernor.wrapBackgroundExecutor(original);
+    }
+
+    @Inject(method = "done", at = @At("RETURN"), require = 0)
     private void onDone(CallbackInfoReturnable<CompletableFuture<?>> cir) {
         CompletableFuture<?> future = cir.getReturnValue();
         if (future != null) {
