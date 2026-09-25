@@ -21,13 +21,13 @@ public abstract class ModelBakeryParallelWorkerMixin {
 
     private static long startTime = 0;
 
-    @Inject(method = "<init>", at = @At("HEAD"))
-    private void onModelBakeryHead(CallbackInfo ci) {
+    @Inject(method = "bakeModels", at = @At("HEAD"), require = 0)
+    private void onBakeModelsHead(CallbackInfo ci) {
         startTime = System.currentTimeMillis();
     }
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void onModelBakeryInit(CallbackInfo ci) {
+    @Inject(method = "bakeModels", at = @At("RETURN"), require = 0)
+    private void onBakeModelsReturn(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
             long elapsed = Math.max(0, System.currentTimeMillis() - startTime);
             LOGGER.info("[ModelBakeryProfiler] 🎯 ModelBakery loaded and baked all models in {} ms.", elapsed);
