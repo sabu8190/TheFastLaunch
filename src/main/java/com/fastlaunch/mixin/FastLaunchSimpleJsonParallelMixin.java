@@ -26,12 +26,9 @@ import java.util.concurrent.ForkJoinPool;
 @Mixin(value = SimpleJsonResourceReloadListener.class, priority = 500)
 public abstract class FastLaunchSimpleJsonParallelMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/SimpleJsonParallel");
-    private static final ForkJoinPool JSON_SCAN_POOL = new ForkJoinPool(
-            Math.min(32, Math.max(4, Runtime.getRuntime().availableProcessors() * 2)),
-            com.fastlaunch.core.FastLaunchThreadHelper.createSafeFactory("FastLaunch-JsonScanWorker"),
-            null,
-            false
-    );
+    private static ForkJoinPool getPool() {
+        return com.fastlaunch.core.FastLaunchThreadHelper.getSharedWorkerPool();
+    }
 
     @Inject(method = "scanDirectory", at = @At("HEAD"), cancellable = true)
     private static void onScanDirectoryParallel(ResourceManager resourceManager, String directory, Gson gson, Map<ResourceLocation, JsonElement> output, CallbackInfo ci) {
@@ -56,7 +53,7 @@ public abstract class FastLaunchSimpleJsonParallelMixin {
 
             Map<ResourceLocation, JsonElement> parallelOutput = new ConcurrentHashMap<>(count);
 
-            JSON_SCAN_POOL.submit(() -> {
+            getPool().submit(() -> {
                 matchingResources.entrySet().parallelStream().forEach(entry -> {
                     ResourceLocation rawLoc = entry.getKey();
                     ResourceLocation id = fileToIdConverter.fileToId(rawLoc);
@@ -76,10 +73,10 @@ public abstract class FastLaunchSimpleJsonParallelMixin {
             long elapsed = System.currentTimeMillis() - startTime;
             if (count > 50 || elapsed > 100) {
                 LOGGER.info("[SimpleJsonParallel] ⚡ Scanned & parsed [{}] ({} JSON files) in {} ms across {} threads!", 
-                        directory, count, elapsed, JSON_SCAN_POOL.getParallelism());
+                        directory, count, elapsed, getPool().getParallelism());
                 com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
                         "SimpleJsonParallel", 
-                        String.format("ACTIVE [Parallel JSON Scanner (%d threads)]", JSON_SCAN_POOL.getParallelism())
+                        String.format("ACTIVE [Parallel JSON Scanner (%d threads)]", getPool().getParallelism())
                 );
             }
 

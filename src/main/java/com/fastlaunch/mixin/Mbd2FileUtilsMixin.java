@@ -20,12 +20,9 @@ import java.util.function.BiConsumer;
 @Mixin(targets = "com.lowdragmc.mbd2.utils.FileUtils", remap = false)
 public class Mbd2FileUtilsMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/MBD2ParallelLoader");
-    private static final ForkJoinPool PARALLEL_POOL = new ForkJoinPool(
-            Math.max(2, Runtime.getRuntime().availableProcessors() - 1),
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-            null,
-            true
-    );
+    private static ForkJoinPool getPool() {
+        return com.fastlaunch.core.FastLaunchThreadHelper.getSharedWorkerPool();
+    }
 
     @Inject(method = "loadNBTFiles", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private static void onLoadNBTFilesParallel(File dir, String suffix, BiConsumer<File, CompoundTag> consumer, CallbackInfo ci) {
@@ -36,11 +33,11 @@ public class Mbd2FileUtilsMixin {
 
         System.out.println("[FastLaunch] >>> MBD2 Multi-Core Parallel Loader TRIGGERED for " + files.length + " files! <<<");
         LOGGER.info("[MBD2ParallelLoader] >>> Multi-core parallelizing {} MBD2 files on {} cores! <<<",
-                files.length, PARALLEL_POOL.getParallelism());
+                files.length, getPool().getParallelism());
 
         long start = System.currentTimeMillis();
 
-        PARALLEL_POOL.submit(() -> {
+        getPool().submit(() -> {
             Arrays.stream(files).parallel().forEach(file -> {
                 try {
                     CompoundTag tag = NbtIo.readCompressed(file);
@@ -55,10 +52,10 @@ public class Mbd2FileUtilsMixin {
 
         long elapsed = System.currentTimeMillis() - start;
         System.out.println("[FastLaunch] >>> MBD2 Multi-Core Parallel Loader COMPLETED in " + elapsed + " ms! <<<");
-        LOGGER.info("[MBD2ParallelLoader] Completed {} definitions in {} ms across {} threads.", files.length, elapsed, PARALLEL_POOL.getParallelism());
+        LOGGER.info("[MBD2ParallelLoader] Completed {} definitions in {} ms across {} threads.", files.length, elapsed, getPool().getParallelism());
         FastLaunchSuccessLogger.recordActiveFeature(
                 "MBD2-ParallelNBTLoader", 
-                String.format("ACTIVE [Parsed %d NBT files in %d ms on %d threads]", files.length, elapsed, PARALLEL_POOL.getParallelism())
+                String.format("ACTIVE [Parsed %d NBT files in %d ms on %d threads]", files.length, elapsed, getPool().getParallelism())
         );
 
         ci.cancel();

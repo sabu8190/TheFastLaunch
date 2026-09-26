@@ -28,12 +28,9 @@ import java.util.concurrent.ForkJoinPool;
 @Mixin(value = ThingParser.class, remap = false)
 public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBuilder<?, TBuilder>> {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ThingParserParallel");
-    private static final ForkJoinPool PARSER_POOL = new ForkJoinPool(
-            Math.min(32, Math.max(4, Runtime.getRuntime().availableProcessors() * 2)),
-            com.fastlaunch.core.FastLaunchThreadHelper.createSafeFactory("FastLaunch-JsonThingsWorker"),
-            null,
-            false
-    );
+    private static ForkJoinPool getPool() {
+        return com.fastlaunch.core.FastLaunchThreadHelper.getSharedWorkerPool();
+    }
 
     @Shadow(remap = false) @Final private String thingType;
     @Shadow(remap = false) @Final private Map<ResourceLocation, TBuilder> buildersByName;
@@ -56,13 +53,13 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
         try {
             long startTime = System.currentTimeMillis();
             LOGGER.info("[ThingParserParallel] ⚡ Multi-Core Parallel Parsing started for [{}] ({} JSON files across {} threads)", 
-                    this.thingType, map.size(), PARSER_POOL.getParallelism());
+                    this.thingType, map.size(), getPool().getParallelism());
 
             // 元の map のキー順序（Deterministic Order）を厳密に保持
             java.util.List<ResourceLocation> orderedKeys = new java.util.ArrayList<>(map.keySet());
             Map<ResourceLocation, TBuilder> parsedResults = new ConcurrentHashMap<>();
 
-            PARSER_POOL.submit(() -> {
+            getPool().submit(() -> {
                 orderedKeys.parallelStream().forEach(name -> {
                     JsonElement json = map.get(name);
                     if (json == null || !json.isJsonObject()) return;

@@ -25,12 +25,9 @@ import java.util.zip.ZipFile;
 @Mixin(targets = "com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader", remap = false)
 public abstract class TouhouLittleMaidFastReloadMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/MaidFastLoader");
-    private static final ForkJoinPool MAID_POOL = new ForkJoinPool(
-            Math.min(16, Math.max(4, Runtime.getRuntime().availableProcessors())),
-            com.fastlaunch.core.FastLaunchThreadHelper.createSafeFactory("FastLaunch-MaidWorker"),
-            null,
-            false
-    );
+    private static ForkJoinPool getPool() {
+        return com.fastlaunch.core.FastLaunchThreadHelper.getSharedWorkerPool();
+    }
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
     @Shadow(remap = false)
@@ -59,9 +56,9 @@ public abstract class TouhouLittleMaidFastReloadMixin {
             }
 
             LOGGER.info("[MaidFastLoader] ⚡ Starting parallel load for {} custom maid packs across {} threads...", 
-                    files.length, MAID_POOL.getParallelism());
+                    files.length, getPool().getParallelism());
 
-            MAID_POOL.submit(() -> {
+            getPool().submit(() -> {
                 Arrays.stream(files).parallel().forEach(file -> {
                     try {
                         if (file.isFile() && file.getName().endsWith(".zip")) {
@@ -109,7 +106,7 @@ public abstract class TouhouLittleMaidFastReloadMixin {
             long start = System.currentTimeMillis();
             Path rootPath = rootFolder.toPath();
 
-            MAID_POOL.submit(() -> {
+            getPool().submit(() -> {
                 Arrays.stream(domainDirs).parallel().forEach(domainDir -> {
                     if (!domainDir.isDirectory()) return;
                     String domain = domainDir.getName();
@@ -136,7 +133,7 @@ public abstract class TouhouLittleMaidFastReloadMixin {
 
             long elapsed = Math.max(0, System.currentTimeMillis() - start);
             LOGGER.info("[MaidFastLoader] ⚡ Parallelized folder parse for [{}] ({} domains across {} threads in {} ms)",
-                    rootFolder.getName(), domainDirs.length, MAID_POOL.getParallelism(), elapsed);
+                    rootFolder.getName(), domainDirs.length, getPool().getParallelism(), elapsed);
 
             ci.cancel(); // バニラの直列ループを安全にバイパス！
         } catch (Throwable t) {

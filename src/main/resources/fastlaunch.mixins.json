@@ -13,8 +13,6 @@
     "FastLaunchJeiSearchParallelMixin",
     "FastLaunchJemiCompatibilityMixin",
     "FastLaunchJemiMekanismRecipeBridgeMixin",
-    "FastLaunchJsonThingsMultiCoreParserMixin",
-    "FastLaunchJsonThingsParallelMixin",
     "FastLaunchLanguageSyncMixin",
     "FastLaunchLdLibModelBakeMixin",
     "FastLaunchMekMatterFluidNpeGuardMixin",

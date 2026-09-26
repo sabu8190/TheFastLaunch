@@ -7,8 +7,6 @@ import org.apache.logging.log4j.Logger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 大規模 Mod クラス＆リソース並列プリロードエンジン v2.0。
@@ -16,14 +14,6 @@ import java.util.concurrent.Executors;
  */
 public class ClassPreloadEngine {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ClassPreloader");
-    private static final ExecutorService PRELOAD_EXECUTOR = Executors.newFixedThreadPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors() - 1),
-            r -> {
-                Thread t = new Thread(r, "FastLaunch-ClassPreloadWorker");
-                t.setDaemon(true);
-                return t;
-            }
-    );
 
     private static final List<String> HEAVY_CLASSES = Arrays.asList(
             // FantasyEnd & Mega UOM
@@ -104,6 +94,6 @@ public class ClassPreloadEngine {
                     "ClassPreloader", 
                     String.format("ACTIVE [Pre-loaded %d mod classes in %d ms]", loadedCount.get(), elapsed)
             );
-        }, PRELOAD_EXECUTOR);
+        }, FastLaunchThreadHelper.getSharedWorkerPool());
     }
 }

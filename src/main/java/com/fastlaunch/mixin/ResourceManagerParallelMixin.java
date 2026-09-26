@@ -22,12 +22,9 @@ import java.util.concurrent.ForkJoinPool;
 @Mixin(value = MultiPackResourceManager.class, priority = 500)
 public abstract class ResourceManagerParallelMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ResourceManagerMixin");
-    private static final ForkJoinPool RESOURCE_POOL = new ForkJoinPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors() - 1),
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-            null,
-            true
-    );
+    private static ForkJoinPool getPool() {
+        return com.fastlaunch.core.FastLaunchThreadHelper.getSharedWorkerPool();
+    }
 
     @Shadow
     private List<PackResources> packs;
@@ -36,10 +33,10 @@ public abstract class ResourceManagerParallelMixin {
     private void onResourceManagerInit(CallbackInfo ci) {
         if (this.packs != null && !this.packs.isEmpty()) {
             LOGGER.info("[FastLaunch] MultiPackResourceManager parallel warmup initialized for {} packs on {} cores!",
-                    this.packs.size(), RESOURCE_POOL.getParallelism());
+                    this.packs.size(), getPool().getParallelism());
             
             // バックグラウンドで各 Pack の内部メタデータとインデックスを全コア並列展開
-            RESOURCE_POOL.submit(() -> {
+            getPool().submit(() -> {
                 this.packs.parallelStream().forEach(pack -> {
                     try {
                         pack.getNamespaces(net.minecraft.server.packs.PackType.CLIENT_RESOURCES);

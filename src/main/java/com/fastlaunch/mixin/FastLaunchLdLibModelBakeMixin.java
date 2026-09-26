@@ -31,12 +31,9 @@ public abstract class FastLaunchLdLibModelBakeMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/LdLibModelOptimizer");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
 
-    private static final ForkJoinPool LDL_POOL = new ForkJoinPool(
-            Math.min(24, Math.max(4, Runtime.getRuntime().availableProcessors())),
-            com.fastlaunch.core.FastLaunchThreadHelper.createSafeFactory("FastLaunch-LdLibWorker"),
-            null,
-            false
-    );
+    private static ForkJoinPool getPool() {
+        return com.fastlaunch.core.FastLaunchThreadHelper.getSharedWorkerPool();
+    }
 
     @Inject(method = "modelBake", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private void onModelBakeParallel(ModelEvent.ModifyBakingResult event, CallbackInfo ci) {
@@ -97,12 +94,12 @@ public abstract class FastLaunchLdLibModelBakeMixin {
             final Method finalMatTex = materialTextureMethod;
 
             LOGGER.info("[LdLibModelOptimizer] ⚡ Starting parallel ModelBake post-processing for {} models across {} threads...",
-                    models.size(), LDL_POOL.getParallelism());
+                    models.size(), getPool().getParallelism());
 
             Map<ResourceLocation, BakedModel> replacements = new ConcurrentHashMap<>();
             List<Map.Entry<ResourceLocation, BakedModel>> entries = new ArrayList<>(models.entrySet());
 
-            LDL_POOL.submit(() -> {
+            getPool().submit(() -> {
                 entries.parallelStream().forEach(entry -> {
                     ResourceLocation location = entry.getKey();
                     BakedModel baked = entry.getValue();
