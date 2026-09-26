@@ -4,8 +4,13 @@ import com.fastlaunch.config.FastLaunchConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.function.Consumer;
 
 /**
  * Minecraft / Forge 環境に最適化された軽量マルチコア並列プール管理クラス。
@@ -26,7 +31,7 @@ public class FastLaunchThreadHelper {
             synchronized (FastLaunchThreadHelper.class) {
                 if (SHARED_WORKER_POOL == null) {
                     int availableCores = Runtime.getRuntime().availableProcessors();
-                    // コア数に応じた適正な並列度（スレッド肥大化・CPU枯渇を防止）
+                    // コア数に応じた適正な並列度（スレッド肥大化・CPU枯渇を防止：デフォルト最大6スレッド）
                     int parallelism = Math.max(2, Math.min(availableCores, FastLaunchConfig.PARALLEL_WORKER_THREADS));
 
                     ClassLoader contextCl = Thread.currentThread().getContextClassLoader();
@@ -37,7 +42,7 @@ public class FastLaunchThreadHelper {
                                 ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
                                 thread.setName("FastLaunch-SharedWorker-" + thread.getPoolIndex());
                                 thread.setDaemon(true);
-                                // メインスレッド（描画・GC）を阻害しないよう優先度をわずかに下げて軽量化
+                                // メインスレッド（描画・GC）を阻害しないよう優先度を下げて軽量化
                                 thread.setPriority(Math.max(Thread.MIN_PRIORITY, Thread.NORM_PRIORITY - 1));
                                 if (contextCl != null) {
                                     thread.setContextClassLoader(contextCl);
@@ -54,6 +59,47 @@ public class FastLaunchThreadHelper {
             }
         }
         return SHARED_WORKER_POOL;
+    }
+
+    /**
+     * ForkJoinPool.commonPool() を動員せず、指定したマネージドプール内でのみ
+     * 均等チャンク分割して安全・軽量に並列実行する。
+     * 128件ごとに Thread.yield() を挟み、CPU 100% 張り付きを確実に防止する。
+     */
+    public static <T> void executeParallel(Collection<T> items, Consumer<T> action) {
+        if (items == null || items.isEmpty()) return;
+        List<T> list = (items instanceof List) ? (List<T>) items : new ArrayList<>(items);
+        int size = list.size();
+        if (size <= 4) {
+            for (T item : list) {
+                action.accept(item);
+            }
+            return;
+        }
+
+        ForkJoinPool pool = getSharedWorkerPool();
+        int threads = pool.getParallelism();
+        int chunkSize = Math.max(1, (size + threads - 1) / threads);
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (int i = 0; i < size; i += chunkSize) {
+            final int start = i;
+            final int end = Math.min(size, i + chunkSize);
+            futures.add(CompletableFuture.runAsync(() -> {
+                for (int j = start; j < end; j++) {
+                    try {
+                        action.accept(list.get(j));
+                    } catch (Throwable t) {
+                        LOGGER.warn("[ThreadHelper] Error processing parallel task item: {}", t.getMessage());
+                    }
+                    if ((j & 0x7F) == 0) {
+                        Thread.yield(); // CPU占有を適度に解放
+                    }
+                }
+            }, pool));
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
     /**

@@ -59,29 +59,27 @@ public abstract class FastLaunchThingParserParallelMixin<TBuilder extends BaseBu
             java.util.List<ResourceLocation> orderedKeys = new java.util.ArrayList<>(map.keySet());
             Map<ResourceLocation, TBuilder> parsedResults = new ConcurrentHashMap<>();
 
-            getPool().submit(() -> {
-                orderedKeys.parallelStream().forEach(name -> {
-                    JsonElement json = map.get(name);
-                    if (json == null || !json.isJsonObject()) return;
-                    try {
-                        if (!ThingParser.parseAndTestConditions(this.thingType, name, json)) {
-                            return;
-                        }
-                        // builders.add() を並列スレッドから呼び出さず、processThing のみを完全並列実行
-                        // これにより ArrayList の並行書き込みによるデータ欠落（fuma_shuriken等）を100%防止
-                        TBuilder builder = this.processThing(name, json.getAsJsonObject(), b -> {});
-                        if (builder != null) {
-                            parsedResults.put(name, builder);
-                        }
-                    } catch (Throwable t) {
-                        try {
-                            ThingParser.processParseException(this.thingType, name, t);
-                        } catch (Throwable ignored) {
-                            LOGGER.warn("[ThingParserParallel] Notice: Failed to parse [{}:{}]: {}", this.thingType, name, t.getMessage());
-                        }
+            com.fastlaunch.core.FastLaunchThreadHelper.executeParallel(orderedKeys, name -> {
+                JsonElement json = map.get(name);
+                if (json == null || !json.isJsonObject()) return;
+                try {
+                    if (!ThingParser.parseAndTestConditions(this.thingType, name, json)) {
+                        return;
                     }
-                });
-            }).get();
+                    // builders.add() を並列スレッドから呼び出さず、processThing のみを完全並列実行
+                    // これにより ArrayList の並行書き込みによるデータ欠落（fuma_shuriken等）を100%防止
+                    TBuilder builder = this.processThing(name, json.getAsJsonObject(), b -> {});
+                    if (builder != null) {
+                        parsedResults.put(name, builder);
+                    }
+                } catch (Throwable t) {
+                    try {
+                        ThingParser.processParseException(this.thingType, name, t);
+                    } catch (Throwable ignored) {
+                        LOGGER.warn("[ThingParserParallel] Notice: Failed to parse [{}:{}]: {}", this.thingType, name, t.getMessage());
+                    }
+                }
+            });
 
             // スレッドセーフに、かつ【元のキー順序通りに厳密に整列】して
             // buildersByName と builders の両方を 100% 完全同期！

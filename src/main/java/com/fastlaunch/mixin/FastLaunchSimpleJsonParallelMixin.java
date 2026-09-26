@@ -53,20 +53,18 @@ public abstract class FastLaunchSimpleJsonParallelMixin {
 
             Map<ResourceLocation, JsonElement> parallelOutput = new ConcurrentHashMap<>(count);
 
-            getPool().submit(() -> {
-                matchingResources.entrySet().parallelStream().forEach(entry -> {
-                    ResourceLocation rawLoc = entry.getKey();
-                    ResourceLocation id = fileToIdConverter.fileToId(rawLoc);
-                    Resource resource = entry.getValue();
+            com.fastlaunch.core.FastLaunchThreadHelper.executeParallel(matchingResources.entrySet(), entry -> {
+                ResourceLocation rawLoc = entry.getKey();
+                ResourceLocation id = fileToIdConverter.fileToId(rawLoc);
+                Resource resource = entry.getValue();
 
-                    try (BufferedReader reader = resource.openAsReader()) {
-                        JsonElement element = GsonHelper.fromJson(gson, reader, JsonElement.class);
-                        if (element != null) {
-                            parallelOutput.put(id, element);
-                        }
-                    } catch (Throwable ignored) {}
-                });
-            }).get();
+                try (BufferedReader reader = resource.openAsReader()) {
+                    JsonElement element = GsonHelper.fromJson(gson, reader, JsonElement.class);
+                    if (element != null) {
+                        parallelOutput.put(id, element);
+                    }
+                } catch (Throwable ignored) {}
+            });
 
             output.putAll(parallelOutput);
 

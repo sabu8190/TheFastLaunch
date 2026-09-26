@@ -35,14 +35,18 @@ public abstract class ResourceManagerParallelMixin {
             LOGGER.info("[FastLaunch] MultiPackResourceManager parallel warmup initialized for {} packs on {} cores!",
                     this.packs.size(), getPool().getParallelism());
             
-            // バックグラウンドで各 Pack の内部メタデータとインデックスを全コア並列展開
+            // バックグラウンドで各 Pack の内部メタデータを管理共有プールで安全・軽量に並列プリフェッチ
             getPool().submit(() -> {
-                this.packs.parallelStream().forEach(pack -> {
+                com.fastlaunch.core.FastLaunchThreadHelper.executeParallel(this.packs, pack -> {
                     try {
                         pack.getNamespaces(net.minecraft.server.packs.PackType.CLIENT_RESOURCES);
                     } catch (Throwable ignored) {}
                 });
             });
+            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                    "ResourceManagerParallel", 
+                    String.format("ACTIVE [Pre-warmed %d packs on %d threads]", this.packs.size(), getPool().getParallelism())
+            );
         }
     }
 }

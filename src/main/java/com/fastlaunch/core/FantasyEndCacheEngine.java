@@ -6,18 +6,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FantasyEndCacheEngine {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/FantasyEndCache");
     private static final AtomicBoolean ARMED = new AtomicBoolean(false);
-    private static final ForkJoinPool PRELOAD_POOL = new ForkJoinPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors() - 1),
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-            null,
-            true
-    );
 
     public static void initializeFantasyEndCache(File gameDir) {
         if (ARMED.compareAndSet(false, true)) {
@@ -44,7 +37,7 @@ public class FantasyEndCacheEngine {
                         "FantasyEnd-Preload", 
                         String.format("ACTIVE [Pre-loaded %d classes in %d ms]", loaded, elapsed)
                 );
-            }, PRELOAD_POOL);
+            }, FastLaunchThreadHelper.getSharedWorkerPool());
         }
     }
 }

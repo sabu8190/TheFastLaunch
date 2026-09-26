@@ -81,7 +81,7 @@ public class ClassPreloadEngine {
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             java.util.concurrent.atomic.AtomicInteger loadedCount = new java.util.concurrent.atomic.AtomicInteger(0);
 
-            HEAVY_CLASSES.parallelStream().forEach(className -> {
+            FastLaunchThreadHelper.executeParallel(HEAVY_CLASSES, className -> {
                 try {
                     Class.forName(className, false, cl);
                     loadedCount.incrementAndGet();

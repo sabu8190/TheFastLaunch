@@ -58,21 +58,19 @@ public abstract class TouhouLittleMaidFastReloadMixin {
             LOGGER.info("[MaidFastLoader] ⚡ Starting parallel load for {} custom maid packs across {} threads...", 
                     files.length, getPool().getParallelism());
 
-            getPool().submit(() -> {
-                Arrays.stream(files).parallel().forEach(file -> {
-                    try {
-                        if (file.isFile() && file.getName().endsWith(".zip")) {
-                            try (ZipFile zip = new ZipFile(file)) {
-                                readModelFromZipFile(file);
-                            } catch (Throwable ignored) {}
-                        } else if (file.isDirectory()) {
-                            readModelFromFolder(file);
-                        }
-                    } catch (Throwable t) {
-                        LOGGER.warn("[MaidFastLoader] Warning while loading pack {}: {}", file.getName(), t.getMessage());
+            com.fastlaunch.core.FastLaunchThreadHelper.executeParallel(Arrays.asList(files), file -> {
+                try {
+                    if (file.isFile() && file.getName().endsWith(".zip")) {
+                        try (ZipFile zip = new ZipFile(file)) {
+                            readModelFromZipFile(file);
+                        } catch (Throwable ignored) {}
+                    } else if (file.isDirectory()) {
+                        readModelFromFolder(file);
                     }
-                });
-            }).get();
+                } catch (Throwable t) {
+                    LOGGER.warn("[MaidFastLoader] Warning while loading pack {}: {}", file.getName(), t.getMessage());
+                }
+            });
 
             long elapsed = Math.max(0, System.currentTimeMillis() - start);
             LOGGER.info("[MaidFastLoader] 🚀 Loaded {} maid packs in {} ms (Parallelized)!", files.length, elapsed);
@@ -106,30 +104,28 @@ public abstract class TouhouLittleMaidFastReloadMixin {
             long start = System.currentTimeMillis();
             Path rootPath = rootFolder.toPath();
 
-            getPool().submit(() -> {
-                Arrays.stream(domainDirs).parallel().forEach(domainDir -> {
-                    if (!domainDir.isDirectory()) return;
-                    String domain = domainDir.getName();
-                    try {
-                        loadMaidModelPack(rootPath, domain);
-                    } catch (Throwable t) {
-                        LOGGER.warn("[MaidFastLoader] Error loading maid models for [{}]: {}", domain, t.getMessage());
-                    }
-                    try {
-                        loadChairModelPack(rootPath, domain);
-                    } catch (Throwable t) {
-                        LOGGER.warn("[MaidFastLoader] Error loading chair models for [{}]: {}", domain, t.getMessage());
-                    }
-                    try {
-                        Class<?> langLoader = Class.forName("com.github.tartaricacid.touhoulittlemaid.client.resource.LanguageLoader");
-                        langLoader.getMethod("readLanguageFile", Path.class, String.class).invoke(null, rootPath, domain);
-                    } catch (Throwable ignored) {}
-                    try {
-                        Class<?> soundLoader = Class.forName("com.github.tartaricacid.touhoulittlemaid.client.sound.CustomSoundLoader");
-                        soundLoader.getMethod("loadSoundPack", Path.class, String.class).invoke(null, rootPath, domain);
-                    } catch (Throwable ignored) {}
-                });
-            }).get();
+            com.fastlaunch.core.FastLaunchThreadHelper.executeParallel(Arrays.asList(domainDirs), domainDir -> {
+                if (!domainDir.isDirectory()) return;
+                String domain = domainDir.getName();
+                try {
+                    loadMaidModelPack(rootPath, domain);
+                } catch (Throwable t) {
+                    LOGGER.warn("[MaidFastLoader] Error loading maid models for [{}]: {}", domain, t.getMessage());
+                }
+                try {
+                    loadChairModelPack(rootPath, domain);
+                } catch (Throwable t) {
+                    LOGGER.warn("[MaidFastLoader] Error loading chair models for [{}]: {}", domain, t.getMessage());
+                }
+                try {
+                    Class<?> langLoader = Class.forName("com.github.tartaricacid.touhoulittlemaid.client.resource.LanguageLoader");
+                    langLoader.getMethod("readLanguageFile", Path.class, String.class).invoke(null, rootPath, domain);
+                } catch (Throwable ignored) {}
+                try {
+                    Class<?> soundLoader = Class.forName("com.github.tartaricacid.touhoulittlemaid.client.sound.CustomSoundLoader");
+                    soundLoader.getMethod("loadSoundPack", Path.class, String.class).invoke(null, rootPath, domain);
+                } catch (Throwable ignored) {}
+            });
 
             long elapsed = Math.max(0, System.currentTimeMillis() - start);
             LOGGER.info("[MaidFastLoader] ⚡ Parallelized folder parse for [{}] ({} domains across {} threads in {} ms)",

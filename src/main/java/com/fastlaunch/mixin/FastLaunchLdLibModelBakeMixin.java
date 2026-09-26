@@ -99,70 +99,68 @@ public abstract class FastLaunchLdLibModelBakeMixin {
             Map<ResourceLocation, BakedModel> replacements = new ConcurrentHashMap<>();
             List<Map.Entry<ResourceLocation, BakedModel>> entries = new ArrayList<>(models.entrySet());
 
-            getPool().submit(() -> {
-                entries.parallelStream().forEach(entry -> {
-                    ResourceLocation location = entry.getKey();
-                    BakedModel baked = entry.getValue();
-                    if (baked == null || ldlRendererModelClass.isInstance(baked) || baked.isCustomRenderer()) {
-                        return;
+            com.fastlaunch.core.FastLaunchThreadHelper.executeParallel(entries, entry -> {
+                ResourceLocation location = entry.getKey();
+                BakedModel baked = entry.getValue();
+                if (baked == null || ldlRendererModelClass.isInstance(baked) || baked.isCustomRenderer()) {
+                    return;
+                }
+
+                UnbakedModel unbaked = topLevelModels.get(location);
+                if (unbaked == null) return;
+
+                try {
+                    Boolean cachedResult = wrappedModels.get(location);
+                    boolean shouldWrap = false;
+
+                    if (cachedResult != null) {
+                        shouldWrap = cachedResult;
+                    } else {
+                        Deque<ResourceLocation> deque = new ArrayDeque<>();
+                        Set<ResourceLocation> visited = new HashSet<>();
+                        deque.push(location);
+                        visited.add(location);
+
+                        while (!deque.isEmpty() && !shouldWrap) {
+                            ResourceLocation currentLoc = deque.pop();
+                            UnbakedModel currentUnbaked = (currentLoc == location) ? unbaked : bakery.getModel(currentLoc);
+                            if (currentUnbaked == null) continue;
+
+                            Collection<?> textures = (Collection<?>) multimapGet.invoke(scrapedTextures, currentLoc);
+                            if (textures != null) {
+                                for (Object mat : textures) {
+                                    if (mat instanceof net.minecraft.client.resources.model.Material && finalMatTex != null) {
+                                        ResourceLocation texLoc = (ResourceLocation) finalMatTex.invoke(mat);
+                                        ResourceLocation absLoc = (ResourceLocation) spriteToAbsolute.invoke(null, texLoc);
+                                        Object meta = getMetadata.invoke(null, absLoc);
+                                        boolean missing = (boolean) isMissing.invoke(meta);
+                                        if (!missing) {
+                                            shouldWrap = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (!shouldWrap) {
+                                for (ResourceLocation dep : currentUnbaked.getDependencies()) {
+                                    if (visited.add(dep)) {
+                                        deque.push(dep);
+                                    }
+                                }
+                            }
+                        }
+                        synchronized (wrappedModels) {
+                            wrappedModels.put(location, shouldWrap);
+                        }
                     }
 
-                    UnbakedModel unbaked = topLevelModels.get(location);
-                    if (unbaked == null) return;
-
-                    try {
-                        Boolean cachedResult = wrappedModels.get(location);
-                        boolean shouldWrap = false;
-
-                        if (cachedResult != null) {
-                            shouldWrap = cachedResult;
-                        } else {
-                            Deque<ResourceLocation> deque = new ArrayDeque<>();
-                            Set<ResourceLocation> visited = new HashSet<>();
-                            deque.push(location);
-                            visited.add(location);
-
-                            while (!deque.isEmpty() && !shouldWrap) {
-                                ResourceLocation currentLoc = deque.pop();
-                                UnbakedModel currentUnbaked = (currentLoc == location) ? unbaked : bakery.getModel(currentLoc);
-                                if (currentUnbaked == null) continue;
-
-                                Collection<?> textures = (Collection<?>) multimapGet.invoke(scrapedTextures, currentLoc);
-                                if (textures != null) {
-                                    for (Object mat : textures) {
-                                        if (mat instanceof net.minecraft.client.resources.model.Material && finalMatTex != null) {
-                                            ResourceLocation texLoc = (ResourceLocation) finalMatTex.invoke(mat);
-                                            ResourceLocation absLoc = (ResourceLocation) spriteToAbsolute.invoke(null, texLoc);
-                                            Object meta = getMetadata.invoke(null, absLoc);
-                                            boolean missing = (boolean) isMissing.invoke(meta);
-                                            if (!missing) {
-                                                shouldWrap = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (!shouldWrap) {
-                                    for (ResourceLocation dep : currentUnbaked.getDependencies()) {
-                                        if (visited.add(dep)) {
-                                            deque.push(dep);
-                                        }
-                                    }
-                                }
-                            }
-                            synchronized (wrappedModels) {
-                                wrappedModels.put(location, shouldWrap);
-                            }
-                        }
-
-                        if (shouldWrap) {
-                            BakedModel wrapped = (BakedModel) customModelConstructor.newInstance(baked);
-                            replacements.put(location, wrapped);
-                        }
-                    } catch (Throwable ignored) {}
-                });
-            }).get();
+                    if (shouldWrap) {
+                        BakedModel wrapped = (BakedModel) customModelConstructor.newInstance(baked);
+                        replacements.put(location, wrapped);
+                    }
+                } catch (Throwable ignored) {}
+            });
 
             // 結果の一括反映
             models.putAll(replacements);

@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -17,12 +16,6 @@ import java.util.zip.ZipFile;
 public class ResourceZipPreExtractCacheEngine {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ZipCacheEngine");
     private static final String CACHE_DIR_NAME = ".fastlaunch_extracted_assets";
-    private static final ForkJoinPool EXTRACT_POOL = new ForkJoinPool(
-            Math.max(4, Runtime.getRuntime().availableProcessors() - 1),
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-            null,
-            true
-    );
     private static volatile boolean initialized = false;
 
     public static void initializeZipCache(File gameDir) {
@@ -57,10 +50,10 @@ public class ResourceZipPreExtractCacheEngine {
                         })
                         .collect(Collectors.toList());
 
-                LOGGER.info("[ZipCacheEngine] Parallel pre-extracting isolated assets for {} heavy mods on {} cores...",
-                        targetJars.size(), EXTRACT_POOL.getParallelism());
+                LOGGER.info("[ZipCacheEngine] Parallel pre-extracting isolated assets for {} heavy mods on managed pool...",
+                        targetJars.size());
 
-                targetJars.parallelStream().forEach(jarPath -> {
+                FastLaunchThreadHelper.executeParallel(targetJars, jarPath -> {
                     File jarCacheDir = new File(cacheDir, jarPath.getFileName().toString());
                     if (!jarCacheDir.exists()) jarCacheDir.mkdirs();
 
@@ -79,7 +72,7 @@ public class ResourceZipPreExtractCacheEngine {
             } catch (Throwable e) {
                 LOGGER.warn("[ZipCacheEngine] Error in asset cache", e);
             }
-        }, EXTRACT_POOL);
+        }, FastLaunchThreadHelper.getSharedWorkerPool());
     }
 
     private static void extractEntry(ZipFile zip, ZipEntry entry, File baseDir) {

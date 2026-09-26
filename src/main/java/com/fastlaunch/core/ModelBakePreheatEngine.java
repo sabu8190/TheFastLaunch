@@ -4,8 +4,6 @@ import com.fastlaunch.logging.FastLaunchSuccessLogger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -19,11 +17,12 @@ public class ModelBakePreheatEngine {
     public static void preheatForkJoinPool() {
         if (INITIALIZED.compareAndSet(false, true)) {
             int cores = Runtime.getRuntime().availableProcessors();
-            ForkJoinPool.commonPool().execute(() -> {
-                LOGGER.info("[ModelPreheat] ForkJoinPool initialized with {} workers.", cores);
+            FastLaunchThreadHelper.getSharedWorkerPool().execute(() -> {
+                LOGGER.info("[ModelPreheat] Shared worker pool warmed up ({} configured workers on {} cores).",
+                        FastLaunchThreadHelper.getSharedWorkerPool().getParallelism(), cores);
                 FastLaunchSuccessLogger.recordActiveFeature(
-                        "ForkJoinPool-Preheat", 
-                        String.format("ACTIVE [%d CPU Worker Cores Ready]", cores)
+                        "WorkerPool-Preheat", 
+                        String.format("ACTIVE [%d CPU Workers Ready]", FastLaunchThreadHelper.getSharedWorkerPool().getParallelism())
                 );
             });
         }

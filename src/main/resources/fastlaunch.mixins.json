@@ -30,10 +30,7 @@
     "Mbd2FileUtilsMixin",
     "MemorySweepForcedKillerMixin",
     "ModelBakeryParallelWorkerMixin",
-    "ModelReplacementCacheMixin",
-    "MultiPackResourceAsyncPumperMixin",
     "ResourceManagerParallelMixin",
-    "ResourcePrewarmParallelMixin",
     "SimpleReloadInstanceFastMixin",
     "TouhouLittleMaidFastReloadMixin"
   ],

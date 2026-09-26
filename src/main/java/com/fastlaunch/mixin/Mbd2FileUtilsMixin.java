@@ -37,18 +37,16 @@ public class Mbd2FileUtilsMixin {
 
         long start = System.currentTimeMillis();
 
-        getPool().submit(() -> {
-            Arrays.stream(files).parallel().forEach(file -> {
-                try {
-                    CompoundTag tag = NbtIo.readCompressed(file);
-                    if (tag != null) {
-                        synchronized (consumer) {
-                            consumer.accept(file, tag);
-                        }
+        com.fastlaunch.core.FastLaunchThreadHelper.executeParallel(Arrays.asList(files), file -> {
+            try {
+                CompoundTag tag = NbtIo.readCompressed(file);
+                if (tag != null) {
+                    synchronized (consumer) {
+                        consumer.accept(file, tag);
                     }
-                } catch (Exception ignored) {}
-            });
-        }).join();
+                }
+            } catch (Exception ignored) {}
+        });
 
         long elapsed = System.currentTimeMillis() - start;
         System.out.println("[FastLaunch] >>> MBD2 Multi-Core Parallel Loader COMPLETED in " + elapsed + " ms! <<<");
