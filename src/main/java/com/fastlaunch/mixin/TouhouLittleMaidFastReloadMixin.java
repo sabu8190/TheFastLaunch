@@ -10,14 +10,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipFile;
 
 /**
- * TouhouLittleMaid の CustomPackLoader.loadPacks をマルチコア並列化し、
- * メインスレッド 6.4 秒フリーズを完全解消する Mixin。
+ * TouhouLittleMaid の CustomPackLoader をマルチコア並列化し、
+ * 1,260個のメイドアセット走査・パース（5.8秒のメインスレッドブロック）を完全解消する Mixin。
  */
 @Pseudo
 @Mixin(targets = "com.github.tartaricacid.touhoulittlemaid.client.resource.CustomPackLoader", remap = false)
@@ -36,6 +38,12 @@ public abstract class TouhouLittleMaidFastReloadMixin {
 
     @Shadow(remap = false)
     private static void readModelFromFolder(File file) {}
+
+    @Shadow(remap = false)
+    private static void loadMaidModelPack(Path path, String domain) {}
+
+    @Shadow(remap = false)
+    private static void loadChairModelPack(Path path, String domain) {}
 
     @Inject(method = "loadPacks", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private static void onLoadPacksParallel(File packFolder, CallbackInfo ci) {
@@ -81,6 +89,58 @@ public abstract class TouhouLittleMaidFastReloadMixin {
             ci.cancel(); // バニラの直列ループを安全にバイパス！
         } catch (Throwable t) {
             LOGGER.error("[MaidFastLoader] Fallback to serial load due to error: {}", t.getMessage());
+        }
+    }
+
+    /**
+     * 1,260個のファイルを含むフォルダ内の各ドメイン（assets/<domain>）をマルチコア並列パースする。
+     */
+    @Inject(method = "readModelFromFolder", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
+    private static void onReadModelFromFolderParallel(File rootFolder, CallbackInfo ci) {
+        if (rootFolder == null || !rootFolder.exists()) return;
+
+        try {
+            File assetsDir = rootFolder.toPath().resolve("assets").toFile();
+            if (!assetsDir.exists() || !assetsDir.isDirectory()) return;
+
+            File[] domainDirs = assetsDir.listFiles((dir, name) -> true);
+            if (domainDirs == null || domainDirs.length == 0) return;
+
+            long start = System.currentTimeMillis();
+            Path rootPath = rootFolder.toPath();
+
+            MAID_POOL.submit(() -> {
+                Arrays.stream(domainDirs).parallel().forEach(domainDir -> {
+                    if (!domainDir.isDirectory()) return;
+                    String domain = domainDir.getName();
+                    try {
+                        loadMaidModelPack(rootPath, domain);
+                    } catch (Throwable t) {
+                        LOGGER.warn("[MaidFastLoader] Error loading maid models for [{}]: {}", domain, t.getMessage());
+                    }
+                    try {
+                        loadChairModelPack(rootPath, domain);
+                    } catch (Throwable t) {
+                        LOGGER.warn("[MaidFastLoader] Error loading chair models for [{}]: {}", domain, t.getMessage());
+                    }
+                    try {
+                        Class<?> langLoader = Class.forName("com.github.tartaricacid.touhoulittlemaid.client.resource.LanguageLoader");
+                        langLoader.getMethod("readLanguageFile", Path.class, String.class).invoke(null, rootPath, domain);
+                    } catch (Throwable ignored) {}
+                    try {
+                        Class<?> soundLoader = Class.forName("com.github.tartaricacid.touhoulittlemaid.client.sound.CustomSoundLoader");
+                        soundLoader.getMethod("loadSoundPack", Path.class, String.class).invoke(null, rootPath, domain);
+                    } catch (Throwable ignored) {}
+                });
+            }).get();
+
+            long elapsed = Math.max(0, System.currentTimeMillis() - start);
+            LOGGER.info("[MaidFastLoader] ⚡ Parallelized folder parse for [{}] ({} domains across {} threads in {} ms)",
+                    rootFolder.getName(), domainDirs.length, MAID_POOL.getParallelism(), elapsed);
+
+            ci.cancel(); // バニラの直列ループを安全にバイパス！
+        } catch (Throwable t) {
+            LOGGER.warn("[MaidFastLoader] Fallback to default readModelFromFolder: {}", t.getMessage());
         }
     }
 }

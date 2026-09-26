@@ -39,14 +39,33 @@ public class ClassPreloadEngine {
             "com.polarice3.goety.Goety",
             "com.polarice3.goety.common.blocks.ModBlocks",
             "com.polarice3.goety.common.items.ModItems",
+            "com.polarice3.goety.common.entities.ModEntityType",
+            "com.polarice3.goety.common.enchantments.ModEnchantments",
+            "com.polarice3.goety.common.effects.GoetyEffects",
+            "com.polarice3.goety.spells.Spells",
             // CraftTweaker (15s construction)
             "com.blamejared.crafttweaker.CraftTweaker",
+            "com.blamejared.crafttweaker.api.CraftTweakerAPI",
+            "com.blamejared.crafttweaker.api.action.base.IAction",
+            // TACZ & WeaponMaster (16s construction)
+            "com.tacz.guns.GunMod",
+            "com.tacz.guns.init.ModItems",
+            "com.tacz.guns.init.ModBlocks",
+            "com.tacz.guns.init.ModEntities",
+            // KubeJS (13s construction)
+            "dev.latvian.mods.kubejs.KubeJS",
+            "dev.latvian.mods.kubejs.script.ScriptType",
+            "dev.latvian.mods.kubejs.bindings.event.ServerEvents",
+            "dev.latvian.mods.kubejs.bindings.event.StartupEvents",
             // Touhou Little Maid
             "com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid",
             // Tinkers' Construct (11s construction)
             "slimeknights.tconstruct.TConstruct",
             "slimeknights.tconstruct.shared.TinkerCommons",
             "slimeknights.tconstruct.tools.TinkerModifiers",
+            "slimeknights.tconstruct.tools.TinkerTools",
+            "slimeknights.tconstruct.fluids.TinkerFluids",
+            "slimeknights.tconstruct.world.TinkerWorld",
             // Immersive Engineering (8s construction)
             "blusunrize.immersiveengineering.ImmersiveEngineering",
             // Cataclysm

@@ -23,6 +23,7 @@ public class FastLaunchConfig {
     public static double CRITICAL_PURGE_THRESHOLD_PERCENT = 92.0;
     public static boolean ENABLE_STARTUP_CACHE_PURGE = true;
     public static boolean ENABLE_CREATE_REGISTRIES_PARALLEL = true;
+    public static boolean ENABLE_JSONTHINGS_ZERO_SEARCH = true;
     public static int PARALLEL_WORKER_THREADS = Math.max(1, Runtime.getRuntime().availableProcessors());
 
     public static void load() {
@@ -46,6 +47,9 @@ public class FastLaunchConfig {
                         }
                         if (json.has("enable_create_registries_parallel")) {
                             ENABLE_CREATE_REGISTRIES_PARALLEL = json.get("enable_create_registries_parallel").getAsBoolean();
+                        }
+                        if (json.has("enable_jsonthings_zero_search")) {
+                            ENABLE_JSONTHINGS_ZERO_SEARCH = json.get("enable_jsonthings_zero_search").getAsBoolean();
                         }
                         if (json.has("parallel_worker_threads")) {
                             PARALLEL_WORKER_THREADS = json.get("parallel_worker_threads").getAsInt();
@@ -74,6 +78,7 @@ public class FastLaunchConfig {
             json.addProperty("critical_purge_threshold_percent", CRITICAL_PURGE_THRESHOLD_PERCENT);
             json.addProperty("enable_startup_cache_purge", ENABLE_STARTUP_CACHE_PURGE);
             json.addProperty("enable_create_registries_parallel", ENABLE_CREATE_REGISTRIES_PARALLEL);
+            json.addProperty("enable_jsonthings_zero_search", ENABLE_JSONTHINGS_ZERO_SEARCH);
             json.addProperty("parallel_worker_threads", PARALLEL_WORKER_THREADS);
 
             try (FileWriter writer = new FileWriter(CONFIG_FILE)) {

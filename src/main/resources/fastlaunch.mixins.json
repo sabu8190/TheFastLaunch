@@ -16,6 +16,7 @@
     "FastLaunchJsonThingsMultiCoreParserMixin",
     "FastLaunchJsonThingsParallelMixin",
     "FastLaunchLanguageSyncMixin",
+    "FastLaunchLdLibModelBakeMixin",
     "FastLaunchMekMatterFluidNpeGuardMixin",
     "FastLaunchMekMatterNpeGuardMixin",
     "FastLaunchObjectHolderMixin",
