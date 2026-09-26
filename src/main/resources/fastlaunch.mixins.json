@@ -33,6 +33,7 @@
     "ModelBakeryParallelWorkerMixin",
     "ResourceManagerParallelMixin",
     "SimpleReloadInstanceFastMixin",
+    "FastLaunchTaczAssetDispatcherMixin",
     "TouhouLittleMaidFastReloadMixin"
   ],
   "client": [],
