@@ -90,6 +90,7 @@ public class FastLaunchForgeMod {
     private void initializeCoreEngines() {
         try {
             File gameDir = FMLPaths.GAMEDIR.get().toFile();
+            syncFmlConfigThreads(gameDir);
             RegistrySnapshotCacheEngine.initializeRegistryCache(gameDir);
             FantasyEndCacheEngine.initializeFantasyEndCache(gameDir);
             ResourceZipPreExtractCacheEngine.initializeZipCache(gameDir);
@@ -101,6 +102,21 @@ public class FastLaunchForgeMod {
         } catch (Throwable t) {
             LOGGER.debug("[TheFastLaunch] Engine initialization note: {}", t.getMessage());
         }
+    }
+
+    private void syncFmlConfigThreads(File gameDir) {
+        try {
+            File fmlToml = new File(new File(gameDir, "config"), "fml.toml");
+            if (fmlToml.exists()) {
+                String content = java.nio.file.Files.readString(fmlToml.toPath());
+                if (content.contains("maxThreads = -1") || content.contains("maxThreads = 0")) {
+                    int targetThreads = com.fastlaunch.config.FastLaunchConfig.PARALLEL_WORKER_THREADS;
+                    String updated = content.replaceAll("maxThreads\\s*=\\s*(-1|0)", "maxThreads = " + targetThreads);
+                    java.nio.file.Files.writeString(fmlToml.toPath(), updated);
+                    LOGGER.info("[TheFastLaunch] 🎯 Auto-optimized fml.toml: Capped maxThreads to {} (Prevents CPU 100% saturation)", targetThreads);
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

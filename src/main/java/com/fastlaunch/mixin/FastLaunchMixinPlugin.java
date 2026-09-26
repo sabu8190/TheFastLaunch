@@ -19,6 +19,25 @@ public class FastLaunchMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
+        // 1. Core i5-13600KF等の高コアCPUにおけるCPU 100%飽和・ファンスパイクを根本抑制
+        // バニラのリソースリロードスレッド（Worker-ResourceReload-0..18）を最大6スレッドにスロットリング
+        int targetThreads = com.fastlaunch.config.FastLaunchConfig.PARALLEL_WORKER_THREADS;
+        if (System.getProperty("max.bg.threads") == null) {
+            System.setProperty("max.bg.threads", String.valueOf(targetThreads));
+            LOGGER.info("[FastLaunch] 🎯 Throttled Minecraft background executor threads: max.bg.threads = {}", targetThreads);
+        }
+
+        // 2. Forge ModWorkManager のスレッド（modloading-worker-0..19）を最大6スレッドに抑制
+        try {
+            Class<?> fmlConfigClass = Class.forName("net.minecraftforge.fml.loading.FMLConfig", false, getClass().getClassLoader());
+            Class<?> configValueClass = Class.forName("net.minecraftforge.fml.loading.FMLConfig$ConfigValue", false, getClass().getClassLoader());
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            Object maxThreadsEnum = Enum.valueOf((Class<Enum>) configValueClass, "MAX_THREADS");
+            java.lang.reflect.Method updateConfig = fmlConfigClass.getMethod("updateConfig", configValueClass, Object.class);
+            updateConfig.invoke(null, maxThreadsEnum, targetThreads);
+            LOGGER.info("[FastLaunch] 🎯 Throttled Forge ModWorkManager threads: MAX_THREADS = {}", targetThreads);
+        } catch (Throwable ignored) {}
+
         try {
             // JustEnoughThreads / jeioptimize の存在をクラスローダーで検知
             Class.forName("com.tonywww.jeioptimize.instrumentation.JeiPluginCallContext", false, getClass().getClassLoader());
