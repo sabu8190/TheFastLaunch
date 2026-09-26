@@ -24,7 +24,8 @@ public class FastLaunchConfig {
     public static boolean ENABLE_STARTUP_CACHE_PURGE = true;
     public static boolean ENABLE_CREATE_REGISTRIES_PARALLEL = true;
     public static boolean ENABLE_JSONTHINGS_ZERO_SEARCH = true;
-    public static int PARALLEL_WORKER_THREADS = Math.max(2, Math.min(8, Runtime.getRuntime().availableProcessors() / 2));
+    public static boolean ENABLE_PERSISTENT_MODEL_CACHE = true;
+    public static int PARALLEL_WORKER_THREADS = Math.max(2, Math.min(6, Runtime.getRuntime().availableProcessors() / 2));
 
     public static void load() {
         try {
@@ -50,6 +51,9 @@ public class FastLaunchConfig {
                         }
                         if (json.has("enable_jsonthings_zero_search")) {
                             ENABLE_JSONTHINGS_ZERO_SEARCH = json.get("enable_jsonthings_zero_search").getAsBoolean();
+                        }
+                        if (json.has("enable_persistent_model_cache")) {
+                            ENABLE_PERSISTENT_MODEL_CACHE = json.get("enable_persistent_model_cache").getAsBoolean();
                         }
                         if (json.has("parallel_worker_threads")) {
                             PARALLEL_WORKER_THREADS = json.get("parallel_worker_threads").getAsInt();

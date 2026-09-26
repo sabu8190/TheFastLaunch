@@ -42,8 +42,8 @@ public class FastLaunchThreadHelper {
                                 ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
                                 thread.setName("FastLaunch-SharedWorker-" + thread.getPoolIndex());
                                 thread.setDaemon(true);
-                                // メインスレッド（描画・GC）を阻害しないよう優先度を下げて軽量化
-                                thread.setPriority(Math.max(Thread.MIN_PRIORITY, Thread.NORM_PRIORITY - 1));
+                                // メインスレッド（描画・GC）を阻害せずファン高回転を防ぐ超静音優先度 (NORM-2)
+                                thread.setPriority(Math.max(Thread.MIN_PRIORITY, Thread.NORM_PRIORITY - 2));
                                 if (contextCl != null) {
                                     thread.setContextClassLoader(contextCl);
                                 }
@@ -53,7 +53,7 @@ public class FastLaunchThreadHelper {
                             false
                     );
 
-                    LOGGER.info("[ThreadHelper] 🚀 Initialized lightweight shared worker pool (Parallelism: {} threads on {} CPU cores, Priority: NORM-1)",
+                    LOGGER.info("[ThreadHelper] 🚀 Initialized quiet shared worker pool (Parallelism: {} threads on {} CPU cores, Priority: NORM-2 Quiet)",
                             parallelism, availableCores);
                 }
             }
@@ -64,7 +64,7 @@ public class FastLaunchThreadHelper {
     /**
      * ForkJoinPool.commonPool() を動員せず、指定したマネージドプール内でのみ
      * 均等チャンク分割して安全・軽量に並列実行する。
-     * 128件ごとに Thread.yield() を挟み、CPU 100% 張り付きを確実に防止する。
+     * 128件ごとに Thread.yield() を挟み、CPU 100% 張り付き・ファンスパイクを確実に防止する。
      */
     public static <T> void executeParallel(Collection<T> items, Consumer<T> action) {
         if (items == null || items.isEmpty()) return;
@@ -92,8 +92,8 @@ public class FastLaunchThreadHelper {
                     } catch (Throwable t) {
                         LOGGER.warn("[ThreadHelper] Error processing parallel task item: {}", t.getMessage());
                     }
-                    if ((j & 0x1FF) == 0) {
-                        Thread.yield(); // CPU占有を適度に解放
+                    if ((j & 0x7F) == 0) {
+                        Thread.yield(); // CPU占有を適度に解放しファン急回転を防止
                     }
                 }
             }, pool));

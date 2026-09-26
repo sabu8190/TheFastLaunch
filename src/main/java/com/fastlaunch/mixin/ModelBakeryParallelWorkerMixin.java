@@ -67,7 +67,8 @@ public abstract class ModelBakeryParallelWorkerMixin {
         if (set == null || set.isEmpty()) return;
         List<ResourceLocation> list = new ArrayList<>(set);
         int total = list.size();
-        LOGGER.info("[ModelBakeryMixin] 🚀 Dispatching {} models to FastLaunch Shared Worker Pool (8 threads)...", total);
+        int poolThreads = FastLaunchThreadHelper.getSharedWorkerPool().getParallelism();
+        LOGGER.info("[ModelBakeryMixin] 🚀 Dispatching {} models to FastLaunch Quiet Worker Pool ({} threads)...", total, poolThreads);
 
         FastLaunchThreadHelper.executeParallel(list, action);
     }

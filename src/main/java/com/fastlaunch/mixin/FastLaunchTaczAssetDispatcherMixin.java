@@ -25,10 +25,11 @@ public abstract class FastLaunchTaczAssetDispatcherMixin {
     @Inject(method = "executor", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private static void onGetExecutor(CallbackInfoReturnable<ExecutorService> cir) {
         if (LOGGED.compareAndSet(false, true)) {
-            LOGGER.info("[TACZOptimizer] 🚀 Upgraded TACZ asset dispatcher to FastLaunch Shared Worker Pool (8 threads)!");
+            int threads = FastLaunchThreadHelper.getSharedWorkerPool().getParallelism();
+            LOGGER.info("[TACZOptimizer] 🚀 Upgraded TACZ asset dispatcher to FastLaunch Quiet Worker Pool ({} threads)!", threads);
             com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
                     "TACZ-AssetParallel", 
-                    "ACTIVE [TACZ gunpack loader upgraded to 8-thread shared pool]"
+                    String.format("ACTIVE [TACZ gunpack loader upgraded to %d-thread quiet pool]", threads)
             );
         }
         cir.setReturnValue(FastLaunchThreadHelper.getSharedWorkerPool());

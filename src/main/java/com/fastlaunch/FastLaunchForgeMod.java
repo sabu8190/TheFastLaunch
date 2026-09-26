@@ -96,6 +96,7 @@ public class FastLaunchForgeMod {
             ResourceZipPreExtractCacheEngine.initializeZipCache(gameDir);
             JsonThingsCacheEngine.initializeJsonThingsCache(gameDir);
             FastLaunchObjectHolderCacheEngine.initializeObjectHolderCache(gameDir);
+            PersistentModelCacheEngine.initialize(gameDir);
             ClassPreloadEngine.startAsyncClassPreloading();
             ModelBakePreheatEngine.preheatForkJoinPool();
             RenderThreadStallDetector.startMonitoring();
@@ -131,6 +132,7 @@ public class FastLaunchForgeMod {
         LOGGER.info("[TheFastLaunch] LoadComplete: All Acceleration Modules Operational!");
         FastLaunchTranslationSyncBridge.setGameReady();
         File gameDir = FMLPaths.GAMEDIR.get().toFile();
+        PersistentModelCacheEngine.flushCacheToDisk(gameDir);
         if (FastLaunchConfig.ENABLE_STARTUP_CACHE_PURGE) {
             FastLaunchStartupCachePurger.purgeAllCaches();
         }
