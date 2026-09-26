@@ -7,6 +7,7 @@
   "mixins": [
     "FastLaunchArcaneAnvilOptimizerMixin",
     "FastLaunchBrewingRecipeIndexMixin",
+    "FastLaunchCatnipStitchedSpriteGuardMixin",
     "FastLaunchCreateRegistriesParallelDispatcherMixin",
     "FastLaunchEmiLocalizedSearchMixin",
     "FastLaunchEmiSearchParallelMixin",
