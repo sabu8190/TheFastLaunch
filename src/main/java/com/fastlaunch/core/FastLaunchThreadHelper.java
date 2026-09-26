@@ -92,7 +92,7 @@ public class FastLaunchThreadHelper {
                     } catch (Throwable t) {
                         LOGGER.warn("[ThreadHelper] Error processing parallel task item: {}", t.getMessage());
                     }
-                    if ((j & 0x7F) == 0) {
+                    if ((j & 0x1FF) == 0) {
                         Thread.yield(); // CPU占有を適度に解放
                     }
                 }

@@ -63,7 +63,20 @@ public abstract class FastLaunchThingResourceManagerMixin {
                 try {
                     Set<String> namespaces = pack.getNamespaces(CustomPackType.THINGS);
                     if (namespaces != null && !namespaces.isEmpty()) {
-                        packsWithThings.add(pack);
+                        boolean hasRealThings = false;
+                        for (String ns : namespaces) {
+                            final boolean[] found = new boolean[]{false};
+                            pack.listResources(CustomPackType.THINGS, ns, "", (loc, ioSupplier) -> {
+                                found[0] = true;
+                            });
+                            if (found[0]) {
+                                hasRealThings = true;
+                                break;
+                            }
+                        }
+                        if (hasRealThings) {
+                            packsWithThings.add(pack);
+                        }
                     }
                 } catch (Throwable ignored) {}
             }
