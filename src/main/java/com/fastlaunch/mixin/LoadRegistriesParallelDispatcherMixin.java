@@ -1,6 +1,5 @@
 package com.fastlaunch.mixin;
 
-import com.fastlaunch.core.FastLaunchObjectHolderCacheEngine;
 import com.fastlaunch.logging.FastLaunchSuccessLogger;
 import net.minecraftforge.registries.GameData;
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * State transition LOAD_REGISTRIES (22秒) を最適化・プロファイリングする Mixin。
+ * State transition LOAD_REGISTRIES をプロファイリングする Mixin。
  */
 @Mixin(value = GameData.class, priority = 500, remap = false)
 public abstract class LoadRegistriesParallelDispatcherMixin {
@@ -31,14 +30,10 @@ public abstract class LoadRegistriesParallelDispatcherMixin {
     private static void onPostRegisterEventsReturn(CallbackInfo ci) {
         if (LOGGED.compareAndSet(false, true)) {
             long elapsed = Math.max(0, System.currentTimeMillis() - postRegisterStartTime);
-            FAST_LOGGER.info("[LoadRegistriesProfiler] ⚡ GameData postRegisterEvents completed in {} ms. (ObjectHolder total time: {} ms, calls: {})",
-                    elapsed, FastLaunchObjectHolderCacheEngine.getTotalOptimizedTimeMs(), FastLaunchObjectHolderCacheEngine.getTotalInvocations());
+            FAST_LOGGER.info("[LoadRegistriesProfiler] ⚡ GameData postRegisterEvents completed in {} ms.", elapsed);
             FastLaunchSuccessLogger.recordActiveFeature(
                     "LoadRegistriesStage", 
-                    String.format("ACTIVE [Completed in %d ms (Holder Opt: %d ms, %d calls)]", 
-                            elapsed, 
-                            FastLaunchObjectHolderCacheEngine.getTotalOptimizedTimeMs(),
-                            FastLaunchObjectHolderCacheEngine.getTotalInvocations())
+                    String.format("ACTIVE [Completed in %d ms]", elapsed)
             );
         }
     }
