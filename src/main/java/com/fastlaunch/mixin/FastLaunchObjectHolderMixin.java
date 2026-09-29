@@ -1,24 +1,34 @@
 package com.fastlaunch.mixin;
 
+import com.fastlaunch.core.FastLaunchObjectHolderCacheEngine;
+import com.fastlaunch.logging.FastLaunchSuccessLogger;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
- * ObjectHolderRegistry のクラス走査をインターセプトし、
- * スナップショットキャッシュとマルチコア並列化をバインドする Mixin。
+ * ObjectHolderRegistry の走査と適用をインターセプトし、
+ * O(1) レジストリインデックスキャッシュによる超高速バッチ適用を行う Mixin。
  */
 @Pseudo
 @Mixin(targets = "net.minecraftforge.registries.ObjectHolderRegistry", remap = false)
 public abstract class FastLaunchObjectHolderMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ObjectHolderOpt");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
+
+    @Shadow
+    private static Set<Consumer<Predicate<ResourceLocation>>> objectHolders;
 
     private static long objectHolderStartTime = 0;
 
@@ -32,10 +42,27 @@ public abstract class FastLaunchObjectHolderMixin {
         if (LOGGED.compareAndSet(false, true)) {
             long elapsed = Math.max(0, System.currentTimeMillis() - objectHolderStartTime);
             LOGGER.info("[ObjectHolderProfiler] ⚡ ObjectHolderRegistry scan completed in {} ms.", elapsed);
-            com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+            // 事前インデックス構築
+            if (objectHolders != null) {
+                FastLaunchObjectHolderCacheEngine.ensureIndexed(objectHolders);
+            }
+            FastLaunchSuccessLogger.recordActiveFeature(
                     "ObjectHolderScan", 
-                    String.format("ACTIVE [Scanned in %d ms]", elapsed)
+                    String.format("ACTIVE [Scanned in %d ms, Indexed %d entries]", 
+                            elapsed, objectHolders != null ? objectHolders.size() : 0)
             );
+        }
+    }
+
+    /**
+     * applyObjectHolders(Predicate) をインターセプトし、
+     * 50レジストリ × 2万ハンドラの全件走査（100万回）を O(InjectedFields) に最適化
+     */
+    @Inject(method = "applyObjectHolders(Ljava/util/function/Predicate;)V", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
+    private static void onApplyObjectHoldersHead(Predicate<ResourceLocation> filter, CallbackInfo ci) {
+        if (objectHolders != null && !objectHolders.isEmpty()) {
+            FastLaunchObjectHolderCacheEngine.applyOptimized(objectHolders, filter);
+            ci.cancel();
         }
     }
 }
