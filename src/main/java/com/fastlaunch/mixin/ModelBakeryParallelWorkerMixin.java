@@ -40,6 +40,9 @@ public abstract class ModelBakeryParallelWorkerMixin {
             // bakedCache と bakedTopLevelModels をスレッドセーフな同期マップに昇格して CME を完全防止
             wrapMapFieldSynchronized("bakedCache");
             wrapMapFieldSynchronized("bakedTopLevelModels");
+
+            // Forgified Fabric API (Fabric Model Loading API) のスレッド競合とガードを完全無害化
+            com.fastlaunch.core.FabricModelLoadingOptimizer.secureModelBakery((ModelBakery) (Object) this);
         } catch (Throwable t) {
             LOGGER.warn("[ModelBakeryMixin] Failed to wrap model maps for multithreading: {}", t.getMessage());
         }
