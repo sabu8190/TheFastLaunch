@@ -38,10 +38,6 @@ public class FastLaunchMixinPlugin implements IMixinConfigPlugin {
             LOGGER.info("[FastLaunch] 🎯 Throttled Forge ModWorkManager threads: MAX_THREADS = {}", targetThreads);
         } catch (Throwable ignored) {}
 
-        // 3. Constructing Mods ステージのボトルネックを解消するため、超早期にバックグラウンド先読みを開始
-        try {
-            com.fastlaunch.core.ClassPreloadEngine.startAsyncClassPreloading();
-        } catch (Throwable ignored) {}
 
         try {
             // JustEnoughThreads / jeioptimize の存在をクラスローダーで検知

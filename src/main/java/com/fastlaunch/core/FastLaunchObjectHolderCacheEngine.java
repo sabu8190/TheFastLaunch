@@ -37,7 +37,10 @@ public class FastLaunchObjectHolderCacheEngine {
     private static final AtomicInteger TOTAL_EXECUTED_HOLDERS = new AtomicInteger(0);
 
     private static Field registryField = null;
-    private static boolean reflectionFailed = false;
+    private static boolean refReflectionFailed = false;
+
+    private static Field holderRegistrySetField = null;
+    private static boolean setReflectionFailed = false;
 
     public static void initializeObjectHolderCache(java.io.File gameDir) {
         try {
@@ -48,6 +51,24 @@ public class FastLaunchObjectHolderCacheEngine {
             LOGGER.info("[ObjectHolderCache] 🎯 FastLaunch ObjectHolder directory ready.");
         } catch (Throwable t) {
             LOGGER.debug("[ObjectHolderCache] Notice: {}", t.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Set<Consumer<Predicate<ResourceLocation>>> getRawObjectHolders() {
+        if (setReflectionFailed) return null;
+        try {
+            if (holderRegistrySetField == null) {
+                Class<?> registryClass = Class.forName("net.minecraftforge.registries.ObjectHolderRegistry");
+                Field f = registryClass.getDeclaredField("objectHolders");
+                f.setAccessible(true);
+                holderRegistrySetField = f;
+            }
+            return (Set<Consumer<Predicate<ResourceLocation>>>) holderRegistrySetField.get(null);
+        } catch (Throwable t) {
+            setReflectionFailed = true;
+            LOGGER.debug("[ObjectHolderCache] Cannot access objectHolders field: {}", t.getMessage());
+            return null;
         }
     }
 
@@ -82,7 +103,7 @@ public class FastLaunchObjectHolderCacheEngine {
     }
 
     private static ResourceLocation extractRegistryName(Consumer<Predicate<ResourceLocation>> holder) {
-        if (reflectionFailed || holder == null) return null;
+        if (refReflectionFailed || holder == null) return null;
         try {
             if (registryField == null) {
                 Class<?> clazz = holder.getClass();
@@ -98,7 +119,7 @@ public class FastLaunchObjectHolderCacheEngine {
                     }
                 }
                 if (registryField == null) {
-                    reflectionFailed = true;
+                    refReflectionFailed = true;
                     return null;
                 }
             }
@@ -115,9 +136,11 @@ public class FastLaunchObjectHolderCacheEngine {
 
     /**
      * O(1) レジストリキーマッチングによる超高速バッチ適用
+     * @return 最適化が実行できた場合は true、フォールバックすべき場合は false
      */
-    public static void applyOptimized(Set<Consumer<Predicate<ResourceLocation>>> rawSet, Predicate<ResourceLocation> filter) {
-        if (rawSet == null || rawSet.isEmpty()) return;
+    public static boolean applyOptimized(Predicate<ResourceLocation> filter) {
+        Set<Consumer<Predicate<ResourceLocation>>> rawSet = getRawObjectHolders();
+        if (rawSet == null || rawSet.isEmpty()) return false;
 
         ensureIndexed(rawSet);
 
@@ -156,7 +179,6 @@ public class FastLaunchObjectHolderCacheEngine {
         TOTAL_EXECUTED_HOLDERS.addAndGet(executedThisPass);
         int invCount = TOTAL_INVOCATIONS.incrementAndGet();
 
-        // 定期ロギング（初回および一定回数ごと、または遅延検知時）
         if (invCount == 1 || invCount % 20 == 0) {
             LOGGER.info("[ObjectHolderFastApply] ⚡ Pass #{}: Processed {} matching holders in {} ms (Total time: {} ms).",
                     invCount, executedThisPass, elapsed, TOTAL_OPTIMIZED_TIME_MS.get());
@@ -165,6 +187,7 @@ public class FastLaunchObjectHolderCacheEngine {
         if (aggregate.getSuppressed().length > 0) {
             throw aggregate;
         }
+        return true;
     }
 
     public static long getTotalOptimizedTimeMs() {

@@ -7,14 +7,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -26,9 +23,6 @@ import java.util.function.Predicate;
 public abstract class FastLaunchObjectHolderMixin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ObjectHolderOpt");
     private static final AtomicBoolean LOGGED = new AtomicBoolean(false);
-
-    @Shadow
-    private static Set<Consumer<Predicate<ResourceLocation>>> objectHolders;
 
     private static long objectHolderStartTime = 0;
 
@@ -43,13 +37,14 @@ public abstract class FastLaunchObjectHolderMixin {
             long elapsed = Math.max(0, System.currentTimeMillis() - objectHolderStartTime);
             LOGGER.info("[ObjectHolderProfiler] ⚡ ObjectHolderRegistry scan completed in {} ms.", elapsed);
             // 事前インデックス構築
-            if (objectHolders != null) {
-                FastLaunchObjectHolderCacheEngine.ensureIndexed(objectHolders);
+            var holders = FastLaunchObjectHolderCacheEngine.getRawObjectHolders();
+            if (holders != null) {
+                FastLaunchObjectHolderCacheEngine.ensureIndexed(holders);
             }
             FastLaunchSuccessLogger.recordActiveFeature(
                     "ObjectHolderScan", 
                     String.format("ACTIVE [Scanned in %d ms, Indexed %d entries]", 
-                            elapsed, objectHolders != null ? objectHolders.size() : 0)
+                            elapsed, holders != null ? holders.size() : 0)
             );
         }
     }
@@ -60,8 +55,7 @@ public abstract class FastLaunchObjectHolderMixin {
      */
     @Inject(method = "applyObjectHolders(Ljava/util/function/Predicate;)V", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private static void onApplyObjectHoldersHead(Predicate<ResourceLocation> filter, CallbackInfo ci) {
-        if (objectHolders != null && !objectHolders.isEmpty()) {
-            FastLaunchObjectHolderCacheEngine.applyOptimized(objectHolders, filter);
+        if (FastLaunchObjectHolderCacheEngine.applyOptimized(filter)) {
             ci.cancel();
         }
     }

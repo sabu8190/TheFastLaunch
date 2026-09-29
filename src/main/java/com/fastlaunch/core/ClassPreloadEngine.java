@@ -133,28 +133,28 @@ public class ClassPreloadEngine {
             ClassLoader finalCl = cl;
             AtomicInteger loadedCount = new AtomicInteger(0);
 
-            // Phase 1: スクリプトエンジン・コンパイラ・基盤パーサーの先行 <clinit>
+            // Phase 1: スクリプトエンジン・コンパイラ・基盤パーサーのクラスプリロード
             FastLaunchThreadHelper.executeParallel(ENGINE_CLASSES, className -> {
                 try {
-                    Class.forName(className, true, finalCl);
+                    Class.forName(className, false, finalCl);
                     loadedCount.incrementAndGet();
                 } catch (Throwable ignored) {}
             });
 
-            // Phase 2: トップボトルネック MOD クラス群の先行 <clinit>
+            // Phase 2: トップボトルネック MOD クラス群のクラスプリロード
             FastLaunchThreadHelper.executeParallel(HEAVY_MOD_CLASSES, className -> {
                 try {
-                    Class.forName(className, true, finalCl);
+                    Class.forName(className, false, finalCl);
                     loadedCount.incrementAndGet();
                 } catch (Throwable ignored) {}
             });
 
             long elapsed = Math.max(0, System.currentTimeMillis() - start);
-            LOGGER.info("[EarlyStaticWarmup] ⚡ Multi-core speculative static warmup completed in {} ms (Warmed {} classes).",
+            LOGGER.info("[ClassPreloader] ⚡ Multi-core class bytecode warmup completed in {} ms (Loaded {} classes).",
                     elapsed, loadedCount.get());
             FastLaunchSuccessLogger.recordActiveFeature(
-                    "EarlyStaticWarmup", 
-                    String.format("ACTIVE [Pre-warmed %d heavy classes in %d ms]", loadedCount.get(), elapsed)
+                    "ClassBytecodePreloader", 
+                    String.format("ACTIVE [Pre-loaded %d heavy classes in %d ms]", loadedCount.get(), elapsed)
             );
         }, FastLaunchThreadHelper.getSharedWorkerPool());
     }
