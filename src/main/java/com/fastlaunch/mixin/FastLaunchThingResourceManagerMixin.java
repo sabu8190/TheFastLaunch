@@ -63,6 +63,8 @@ public abstract class FastLaunchThingResourceManagerMixin {
                 try (java.io.DataInputStream in = new java.io.DataInputStream(new java.io.FileInputStream(cacheFile))) {
                     if ("TFL_JT_EMPTY_V1".equals(in.readUTF()) && in.readLong() == currentHash) {
                         LOGGER.info("[ZeroSearchPipeline] ⚡ Cached zero-thingpacks verified from disk (0ms). Instant bypass activated!");
+                        this.loadConfig();
+                        this.mainThreadExecutor = new RunnableQueue();
                         com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
                                 "JsonThings-ZeroSearch",
                                 "ACTIVE [Cached Zero-Search Bypass: 0 thingpacks (0 ms)]"
@@ -173,6 +175,9 @@ public abstract class FastLaunchThingResourceManagerMixin {
 
     @Inject(method = "waitForLoading", at = @At("HEAD"), require = 0, remap = false)
     private void onWaitForLoadingHead(CompletableFuture<ThingResourceManager> future, CallbackInfo ci) {
+        if (this.mainThreadExecutor == null) {
+            this.mainThreadExecutor = new RunnableQueue();
+        }
         LOGGER.info("[ThingResourceManager] ⏳ Main thread entered waitForLoading for JsonThings...");
     }
 
