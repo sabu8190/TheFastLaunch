@@ -118,6 +118,23 @@ public class ClassPreloadEngine {
             "dev.gigaherz.jsonthings.JsonThings"
     );
 
+    // 3. EntityAttributeModificationEvent で参照される主要 LivingEntity クラス群（14.4秒停止の先行解消）
+    private static final List<String> LIVING_ENTITY_CLASSES = Arrays.asList(
+            "com.github.L_Ender.cataclysm.init.ModEntities",
+            "com.github.L_Ender.cataclysm.init.ModAttribute",
+            "com.Polarice3.Goety.common.entities.ModEntityType",
+            "com.Polarice3.Goety.init.ModAttributes",
+            "dev.xkmc.l2hostility.init.L2Hostility",
+            "com.mega.uom.common.attribute.ModAttributes",
+            "com.mega.endinglib.common.init.ModAttributes",
+            "net.minecraft.world.entity.monster.Monster",
+            "net.minecraft.world.entity.monster.Zombie",
+            "net.minecraft.world.entity.monster.Skeleton",
+            "net.minecraft.world.entity.monster.Creeper",
+            "net.minecraft.world.entity.monster.EnderMan",
+            "net.minecraft.world.entity.player.Player"
+    );
+
     public static void startAsyncClassPreloading() {
         if (!STARTED.compareAndSet(false, true)) {
             return;
@@ -143,6 +160,14 @@ public class ClassPreloadEngine {
 
             // Phase 2: トップボトルネック MOD クラス群のクラスプリロード
             FastLaunchThreadHelper.executeParallel(HEAVY_MOD_CLASSES, className -> {
+                try {
+                    Class.forName(className, false, finalCl);
+                    loadedCount.incrementAndGet();
+                } catch (Throwable ignored) {}
+            });
+
+            // Phase 3: 主要 LivingEntity & 属性付与対象クラス群の先行ロード
+            FastLaunchThreadHelper.executeParallel(LIVING_ENTITY_CLASSES, className -> {
                 try {
                     Class.forName(className, false, finalCl);
                     loadedCount.incrementAndGet();

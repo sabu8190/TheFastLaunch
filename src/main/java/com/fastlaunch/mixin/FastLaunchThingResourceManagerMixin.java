@@ -21,6 +21,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -52,6 +54,26 @@ public abstract class FastLaunchThingResourceManagerMixin {
 
         try {
             long startTime = System.currentTimeMillis();
+            File gameDir = net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get().toFile();
+            File cacheFile = new File(gameDir, "fastlaunch_cache/jsonthings_empty.cache");
+
+            // ModpackHash による即時ゼロ秒バイパス判定
+            long currentHash = calculateModpackHash(new File(gameDir, "mods"));
+            if (cacheFile.exists() && cacheFile.length() > 0) {
+                try (java.io.DataInputStream in = new java.io.DataInputStream(new java.io.FileInputStream(cacheFile))) {
+                    if ("TFL_JT_EMPTY_V1".equals(in.readUTF()) && in.readLong() == currentHash) {
+                        LOGGER.info("[ZeroSearchPipeline] ⚡ Cached zero-thingpacks verified from disk (0ms). Instant bypass activated!");
+                        com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
+                                "JsonThings-ZeroSearch",
+                                "ACTIVE [Cached Zero-Search Bypass: 0 thingpacks (0 ms)]"
+                        );
+                        cir.setReturnValue(CompletableFuture.completedFuture((ThingResourceManager) (Object) this));
+                        cir.cancel();
+                        return;
+                    }
+                } catch (Throwable ignored) {}
+            }
+
             this.packList.reload();
             this.loadConfig();
             this.mainThreadExecutor = new RunnableQueue();
@@ -82,10 +104,19 @@ public abstract class FastLaunchThingResourceManagerMixin {
             }
 
             if (packsWithThings.isEmpty()) {
-                // 【Zero-Search 完全バイパス】
-                // 全パックに things/ 定義が存在しないため、196 秒かかる SimpleReloadInstance 走査を完全スキップ
+                // 【Zero-Search 完全バイパス ＆ キャッシュ永続化】
+                // 全パックに things/ 定義が存在しないため、キャッシュファイルに保存して次回スキャンを完全0ms化
+                try {
+                    File cacheDir = new File(gameDir, "fastlaunch_cache");
+                    if (!cacheDir.exists()) cacheDir.mkdirs();
+                    try (java.io.DataOutputStream out = new java.io.DataOutputStream(new java.io.FileOutputStream(cacheFile))) {
+                        out.writeUTF("TFL_JT_EMPTY_V1");
+                        out.writeLong(currentHash);
+                    }
+                } catch (Throwable ignored) {}
+
                 long elapsed = System.currentTimeMillis() - startTime;
-                LOGGER.info("[ZeroSearchPipeline] ⚡ 0 thingpacks detected among {} packs (Checked in {} ms). Zero-Search bypass activated! (196s -> 0ms)",
+                LOGGER.info("[ZeroSearchPipeline] ⚡ 0 thingpacks detected among {} packs (Checked in {} ms). Zero-Search bypass activated! (Saved cache)",
                         selectedPacks.size(), elapsed);
                 com.fastlaunch.logging.FastLaunchSuccessLogger.recordActiveFeature(
                         "JsonThings-ZeroSearch",
@@ -148,5 +179,20 @@ public abstract class FastLaunchThingResourceManagerMixin {
     @Inject(method = "waitForLoading", at = @At("RETURN"), require = 0, remap = false)
     private void onWaitForLoadingReturn(CompletableFuture<ThingResourceManager> future, CallbackInfo ci) {
         LOGGER.info("[ThingResourceManager] ⚡ Main thread resumed after JsonThings completed loading!");
+    }
+
+    private static long calculateModpackHash(File modsDir) {
+        if (!modsDir.exists()) return 0L;
+        try {
+            return Files.walk(modsDir.toPath(), 1)
+                    .filter(p -> p.toString().endsWith(".jar") && !p.getFileName().toString().contains("TheFastLaunch") && !p.getFileName().toString().contains("fastlaunch"))
+                    .mapToLong(p -> {
+                        File f = p.toFile();
+                        return f.length() ^ (f.lastModified() * 31);
+                    })
+                    .sum();
+        } catch (Throwable e) {
+            return 0L;
+        }
     }
 }
