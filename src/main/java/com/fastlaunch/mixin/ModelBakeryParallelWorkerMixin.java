@@ -37,9 +37,9 @@ public abstract class ModelBakeryParallelWorkerMixin {
     private void onBakeModelsHead(CallbackInfo ci) {
         startTime = System.currentTimeMillis();
         try {
-            // bakedCache と bakedTopLevelModels をスレッドセーフな同期マップに昇格して CME を完全防止
-            wrapMapFieldSynchronized("bakedCache");
-            wrapMapFieldSynchronized("bakedTopLevelModels");
+            // bakedCache (f_119213_), bakedTopLevelModels (f_119215_) を含む全Mapフィールドを
+            // 難読化名・環境を問わずスレッドセーフな同期マップに昇格してデータ破損とCMEを完全根絶
+            wrapAllMapFieldsSynchronized();
 
             // Forgified Fabric API (Fabric Model Loading API) のスレッド競合とガードを完全無害化
             com.fastlaunch.core.FabricModelLoadingOptimizer.secureModelBakery((ModelBakery) (Object) this);
@@ -48,17 +48,23 @@ public abstract class ModelBakeryParallelWorkerMixin {
         }
     }
 
-    private void wrapMapFieldSynchronized(String fieldName) {
-        try {
-            Field f = ModelBakery.class.getDeclaredField(fieldName);
-            f.setAccessible(true);
-            Object obj = f.get(this);
-            if (obj instanceof Map && !(obj instanceof ConcurrentHashMap)) {
-                @SuppressWarnings("unchecked")
-                Map<?, ?> original = (Map<?, ?>) obj;
-                f.set(this, Collections.synchronizedMap(original));
-            }
-        } catch (Throwable ignored) {}
+    private void wrapAllMapFieldsSynchronized() {
+        int wrappedCount = 0;
+        for (Field f : ModelBakery.class.getDeclaredFields()) {
+            try {
+                if (Map.class.isAssignableFrom(f.getType())) {
+                    f.setAccessible(true);
+                    Object obj = f.get(this);
+                    if (obj instanceof Map && !(obj instanceof ConcurrentHashMap)) {
+                        @SuppressWarnings("unchecked")
+                        Map<?, ?> original = (Map<?, ?>) obj;
+                        f.set(this, Collections.synchronizedMap(original));
+                        wrappedCount++;
+                    }
+                }
+            } catch (Throwable ignored) {}
+        }
+        LOGGER.info("[ModelBakeryMixin] 🛡️ Wrapped {} ModelBakery map fields with Collections.synchronizedMap for multithreaded baking.", wrappedCount);
     }
 
     @Redirect(

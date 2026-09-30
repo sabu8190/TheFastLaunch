@@ -44,7 +44,8 @@
     "FastLaunchSimpleReloadBarrierMixin",
     "FastLaunchSupermartijnModelGuardMixin",
     "FastLaunchCraftTweakerScanOptimizerMixin",
-    "FastLaunchGoetyConfigOptimizerMixin"
+    "FastLaunchGoetyConfigOptimizerMixin",
+    "FastLaunchSophisticatedBackpacksGuardMixin"
   ],
   "client": [],
   "injectors": {
