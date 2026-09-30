@@ -79,6 +79,19 @@ public class FastLaunchThreadHelper {
         }
 
         ForkJoinPool pool = getSharedWorkerPool();
+        Thread current = Thread.currentThread();
+        // 既に共有ワーカースレッド内で実行中の場合は、自己デッドロック (Recursive Starvation) を防止するため直列処理
+        if (current.getName().startsWith("FastLaunch-SharedWorker")) {
+            for (T item : list) {
+                try {
+                    action.accept(item);
+                } catch (Throwable t) {
+                    LOGGER.warn("[ThreadHelper] Error processing parallel task item: {}", t.getMessage());
+                }
+            }
+            return;
+        }
+
         int threads = pool.getParallelism();
         int chunkSize = Math.max(1, (size + threads - 1) / threads);
 
