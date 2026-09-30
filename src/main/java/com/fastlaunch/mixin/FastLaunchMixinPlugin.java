@@ -53,6 +53,11 @@ public class FastLaunchMixinPlugin implements IMixinConfigPlugin {
         } catch (ClassNotFoundException ignored) {
             isJustEnoughThreadsPresent = false;
         }
+
+        // 3. 最序盤からの投機的クラス＆ConfigSpecバックグラウンド並列ウォームアップ起動
+        try {
+            com.fastlaunch.core.ClassPreloadEngine.startAsyncClassPreloading();
+        } catch (Throwable ignored) {}
     }
 
     @Override

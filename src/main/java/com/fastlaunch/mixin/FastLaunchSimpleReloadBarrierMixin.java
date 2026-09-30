@@ -31,12 +31,14 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
     private <T> void onWaitHead(T backgroundResult, CallbackInfoReturnable<CompletableFuture<T>> cir) {
         try {
             Class<?> clazz = this.getClass();
-            Field mainExecField = findField(clazz, "val$mainThreadExecutor", "f_10796_");
-            Field listenerField = findField(clazz, "val$listener", "f_10797_");
-            Field prevTaskField = findField(clazz, "val$previousTask", "f_10798_");
-            Field thisField = findField(clazz, "this$0", "f_10795_");
+            // 型による完全自動解決（難読化名・MCP名を問わず100%安全に特定）
+            Field mainExecField = findFieldByType(clazz, Executor.class);
+            Field listenerField = findFieldByType(clazz, PreparableReloadListener.class);
+            Field prevTaskField = findFieldByType(clazz, CompletableFuture.class);
+            Field thisField = findFieldByType(clazz, SimpleReloadInstance.class);
 
             if (mainExecField == null || listenerField == null || prevTaskField == null || thisField == null) {
+                LOGGER.warn("[ReloadBarrier] Could not resolve fields by type in {}", clazz.getName());
                 return;
             }
 
@@ -52,14 +54,14 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
             // バニラの進捗管理（preparingListeners の除外と全完了時の allPreparations.complete）を通常通りディスパッチ
             mainThreadExecutor.execute(() -> {
                 try {
-                    Field preparingField = findField(SimpleReloadInstance.class, "preparingListeners", "f_10793_");
+                    Field preparingField = findField(SimpleReloadInstance.class, "preparingListeners", "f_10801_");
                     if (preparingField != null) {
                         @SuppressWarnings("unchecked")
                         Set<PreparableReloadListener> set = (Set<PreparableReloadListener>) preparingField.get(reloadInstance);
                         if (set != null) {
                             set.remove(listener);
                             if (set.isEmpty()) {
-                                Field allPrepField = findField(SimpleReloadInstance.class, "allPreparations", "f_10794_");
+                                Field allPrepField = findField(SimpleReloadInstance.class, "allPreparations", "f_10799_");
                                 if (allPrepField != null) {
                                     @SuppressWarnings("unchecked")
                                     CompletableFuture<Unit> allPrep = (CompletableFuture<Unit>) allPrepField.get(reloadInstance);
@@ -98,6 +100,16 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
         } catch (Throwable t) {
             LOGGER.warn("[ReloadBarrier] Failed to pipeline listener, falling back to vanilla barrier: {}", t.getMessage());
         }
+    }
+
+    private static Field findFieldByType(Class<?> clazz, Class<?> targetType) {
+        for (Field f : clazz.getDeclaredFields()) {
+            if (targetType.isAssignableFrom(f.getType())) {
+                f.setAccessible(true);
+                return f;
+            }
+        }
+        return null;
     }
 
     private static Field findField(Class<?> clazz, String... names) {
