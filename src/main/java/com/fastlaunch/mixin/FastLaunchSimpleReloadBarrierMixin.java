@@ -137,16 +137,53 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
     }
 
     /**
-     * ホワイトリスト方式: バニラの純粋テキストリソース（言語・サウンド・フォント）のみ先行 apply を許可。
-     * ModelManager, ClientModLoader, 全 Mod リスナー (WrapperListener 等) は false を返し
-     * 通常の allPreparations バリア待ちを強制する。
+     * 拡張ホワイトリスト方式:
+     * モデルやブロック・エンティティ描画パイプラインに依存しない独立リスナー
+     * （言語、サウンド、フォント、GeckoLibアニメーション、Guide本、設定、UIデータ等）を
+     * Pipelined Early Apply の対象とし、全タスクの prepare 完了を待たずに即時 apply させる。
      */
     private boolean isSafeForEarlyApply(PreparableReloadListener listener) {
         if (listener == null) return false;
         String className = listener.getClass().getName();
-        // 安全リスト: Vanilla のみ（完全クラス名で厳密判定）
-        return className.equals("net.minecraft.client.resources.language.LanguageManager")
-            || className.equals("net.minecraft.client.sounds.SoundManager")
-            || className.equals("net.minecraft.client.gui.font.FontManager");
+        String name = null;
+        try {
+            name = listener.getName();
+        } catch (Throwable ignored) {}
+
+        // 1. バニラ基幹レンダリング・モデル・ブロック関連は絶対に早期適用しない（安全ガード）
+        if (className.contains("ModelManager") || className.contains("BlockColor")
+                || className.contains("ItemColor") || className.contains("ClientModLoader")
+                || className.contains("TextureManager") || className.contains("LevelRenderer")
+                || className.contains("EntityRenderDispatcher") || className.contains("EntityModelSet")
+                || className.contains("ItemRenderer") || className.contains("ParticleEngine")
+                || className.contains("GameRenderer")) {
+            return false;
+        }
+
+        // 2. バニラの純粋テキスト・オーディオ系
+        if (className.equals("net.minecraft.client.resources.language.LanguageManager")
+                || className.equals("net.minecraft.client.sounds.SoundManager")
+                || className.equals("net.minecraft.client.gui.font.FontManager")) {
+            return true;
+        }
+
+        // 3. 独立した Mod リソースリスナー（アニメーション、ガイド本、設定、UI）
+        String lowerClass = className.toLowerCase();
+        String lowerName = name != null ? name.toLowerCase() : "";
+
+        return lowerClass.contains("geckolib") || lowerName.contains("geckolib")
+                || lowerClass.contains("guideme") || lowerName.contains("guideme")
+                || lowerClass.contains("patchouli") || lowerName.contains("patchouli")
+                || lowerClass.contains("sophisticated") || lowerName.contains("sophisticated")
+                || lowerClass.contains("carbonconfig") || lowerName.contains("carbonconfig")
+                || lowerClass.contains("ftb") || lowerName.contains("ftb")
+                || lowerClass.contains("jade") || lowerName.contains("jade")
+                || lowerClass.contains("resourcefullib") || lowerName.contains("resourcefullib")
+                || lowerClass.contains("slashblade") || lowerName.contains("slashblade")
+                || lowerClass.contains("moonlight") || lowerName.contains("moonlight")
+                || lowerClass.contains("chunkpregen") || lowerName.contains("chunkpregen")
+                || lowerClass.contains("ending_library") || lowerName.contains("ending_library")
+                || lowerClass.contains("polylib") || lowerName.contains("polylib")
+                || lowerClass.contains("miapi") || lowerName.contains("miapi");
     }
 }

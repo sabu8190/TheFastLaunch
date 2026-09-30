@@ -31,8 +31,9 @@ public class FastLaunchThreadHelper {
             synchronized (FastLaunchThreadHelper.class) {
                 if (SHARED_WORKER_POOL == null) {
                     int availableCores = Runtime.getRuntime().availableProcessors();
-                    // コア数に応じた適正な並列度（スレッド肥大化・CPU枯渇を防止：デフォルト最大6スレッド）
-                    int parallelism = Math.max(2, Math.min(availableCores, FastLaunchConfig.PARALLEL_WORKER_THREADS));
+                    // コア数に応じた適正な並列度（メインスレッド・OS用に2スレッド余力を残しつつ最大14〜16スレッド動員）
+                    int maxSafeThreads = Math.max(2, availableCores - 2);
+                    int parallelism = Math.max(4, Math.min(maxSafeThreads, FastLaunchConfig.PARALLEL_WORKER_THREADS));
 
                     ClassLoader contextCl = Thread.currentThread().getContextClassLoader();
 

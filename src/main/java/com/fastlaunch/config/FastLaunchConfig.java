@@ -25,7 +25,7 @@ public class FastLaunchConfig {
     public static boolean ENABLE_CREATE_REGISTRIES_PARALLEL = true;
     public static boolean ENABLE_JSONTHINGS_ZERO_SEARCH = true;
     public static boolean ENABLE_PERSISTENT_MODEL_CACHE = true;
-    public static int PARALLEL_WORKER_THREADS = Math.max(4, Math.min(10, Runtime.getRuntime().availableProcessors() / 2));
+    public static int PARALLEL_WORKER_THREADS = Math.max(4, Math.min(16, (int) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.70)));
 
     public static void load() {
         try {
