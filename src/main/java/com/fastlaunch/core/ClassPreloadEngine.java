@@ -150,6 +150,24 @@ public class ClassPreloadEngine {
             "com.Polarice3.Goety.config.AttributesConfig"
     );
 
+    public static class GoetyConfigTarget {
+        public final String className;
+        public final String tomlRelPath;
+        public GoetyConfigTarget(String className, String tomlRelPath) {
+            this.className = className;
+            this.tomlRelPath = tomlRelPath;
+        }
+    }
+
+    private static final List<GoetyConfigTarget> GOETY_CONFIG_TARGETS = Arrays.asList(
+            new GoetyConfigTarget("com.Polarice3.Goety.config.MainConfig", "goety/goety.toml"),
+            new GoetyConfigTarget("com.Polarice3.Goety.config.AttributesConfig", "goety/goety-attributes.toml"),
+            new GoetyConfigTarget("com.Polarice3.Goety.config.SpellConfig", "goety/goety-spells.toml"),
+            new GoetyConfigTarget("com.Polarice3.Goety.config.BrewConfig", "goety/goety-brews.toml"),
+            new GoetyConfigTarget("com.Polarice3.Goety.config.MobsConfig", "goety/goety-mobs.toml"),
+            new GoetyConfigTarget("com.Polarice3.Goety.config.ItemConfig", "goety/goety-items.toml")
+    );
+
     public static void startAsyncClassPreloading() {
         if (!STARTED.compareAndSet(false, true)) {
             return;
@@ -209,6 +227,21 @@ public class ClassPreloadEngine {
                     // initialize = true で静的イニシャライザをバックグラウンド並列実行
                     Class.forName(className, true, finalCl);
                     configCount.incrementAndGet();
+                } catch (Throwable ignored) {}
+            });
+
+            // Phase 5: Goety 6大 TOML 設定ファイルのマルチコア並列先行パース＆ロード（10.7秒のコンストラクタ停止を解消）
+            FastLaunchThreadHelper.executeParallel(GOETY_CONFIG_TARGETS, target -> {
+                try {
+                    Class<?> cfgCls = Class.forName(target.className, true, finalCl);
+                    java.lang.reflect.Field specField = cfgCls.getField("SPEC");
+                    net.minecraftforge.common.ForgeConfigSpec spec = (net.minecraftforge.common.ForgeConfigSpec) specField.get(null);
+                    if (spec != null && !spec.isLoaded()) {
+                        java.lang.reflect.Method loadMethod = cfgCls.getMethod("loadConfig", net.minecraftforge.common.ForgeConfigSpec.class, String.class);
+                        java.nio.file.Path path = net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve(target.tomlRelPath);
+                        loadMethod.invoke(null, spec, path.toString());
+                        configCount.incrementAndGet();
+                    }
                 } catch (Throwable ignored) {}
             });
 
