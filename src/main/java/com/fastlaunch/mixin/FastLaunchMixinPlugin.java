@@ -19,6 +19,9 @@ public class FastLaunchMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
+        // 0. Windows P-Core Affinity 最適化: Mixin 変換フェーズから P コアに固定
+        com.fastlaunch.core.FastLaunchCpuAffinityEngine.applyPcoreAffinity();
+
         // 1. Core i5-13600KF等の高コアCPUにおけるCPU 100%飽和・ファンスパイクを根本抑制
         // バニラのリソースリロードスレッド（Worker-ResourceReload-0..18）を最大6スレッドにスロットリング
         int targetThreads = com.fastlaunch.config.FastLaunchConfig.PARALLEL_WORKER_THREADS;

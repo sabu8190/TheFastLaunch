@@ -29,6 +29,9 @@ public class FastLaunchForgeMod {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/Core");
 
     static {
+        // Windows P-Core Affinity 最適化: 起動処理を P コア (0..11) に固定して E コア遅延ブレを根絶
+        FastLaunchCpuAffinityEngine.applyPcoreAffinity();
+
         int cores = Math.max(4, Runtime.getRuntime().availableProcessors());
         
         // JVM & Forge 並列Modロードプロパティ
@@ -137,6 +140,7 @@ public class FastLaunchForgeMod {
             FastLaunchStartupCachePurger.purgeAllCaches();
         }
         FastLaunchCacheCleaner.cleanObsoleteCaches(gameDir);
+        FastLaunchCpuAffinityEngine.restoreAllCoresAffinity();
         com.fastlaunch.logging.FastLaunchSuccessLogger.printSuccessReport();
     }
 

@@ -36,7 +36,9 @@
     "ResourceManagerParallelMixin",
     "SimpleReloadInstanceFastMixin",
     "FastLaunchTaczAssetDispatcherMixin",
-    "TouhouLittleMaidFastReloadMixin"
+    "TouhouLittleMaidFastReloadMixin",
+    "FastLaunchWeaponMasterMixin",
+    "FastLaunchResourceManagerCacheMixin"
   ],
   "client": [],
   "injectors": {
