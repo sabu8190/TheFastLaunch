@@ -50,13 +50,14 @@ public class ClassPreloadEngine {
             "com.sky.weaponmaster.RuniaConf"
     );
 
-    // 2. トップボトルネック MOD メインクラスおよび DeferredRegister 構造体（Constructing Mods 直前の先行 <clinit>）
+    // 2. トップボトルネック MOD メインクラスおよび DeferredRegister 構造体（Constructing Mods 直前の先行ロード）
     private static final List<String> HEAVY_MOD_CLASSES = Arrays.asList(
             // Goety (11.1s - Spells, Blocks, Items, Entities, Rituals)
             "com.Polarice3.Goety.Goety",
             "com.Polarice3.Goety.common.blocks.ModBlocks",
             "com.Polarice3.Goety.common.items.ModItems",
             "com.Polarice3.Goety.common.entities.ModEntityType",
+            "com.Polarice3.Goety.common.entities.ally.ModAllyEntities",
             "com.Polarice3.Goety.common.enchantments.ModEnchantments",
             "com.Polarice3.Goety.common.effects.GoetyEffects",
             "com.Polarice3.Goety.spells.Spells",
@@ -65,9 +66,12 @@ public class ClassPreloadEngine {
             "com.Polarice3.Goety.common.events.ModEvents",
             "com.Polarice3.Goety.common.ritual.Rituals",
             "com.Polarice3.Goety.common.research.Research",
-            // CraftTweaker Main (9.6s)
+            // CraftTweaker Main & Plugin Engine (9.6s)
+            "com.blamejared.crafttweaker.CraftTweakerForge",
+            "com.blamejared.crafttweaker.CraftTweakerCommon",
             "com.blamejared.crafttweaker.CraftTweaker",
             "com.blamejared.crafttweaker.api.CraftTweakerAPI",
+            "com.blamejared.crafttweaker.impl.plugin.core.PluginManager",
             // KubeJS Main (8.0s)
             "dev.latvian.mods.kubejs.KubeJS",
             // Cataclysm (7.1s - Entities, Items, Blocks, Attributes)
@@ -97,8 +101,9 @@ public class ClassPreloadEngine {
             "slimeknights.tconstruct.tools.TinkerTools",
             "slimeknights.tconstruct.fluids.TinkerFluids",
             "slimeknights.tconstruct.world.TinkerWorld",
-            // Yes Steve Model & Touhou Little Maid (4.9s)
-            "com.github.tartaricacid.yesstevemodel.YesSteveModel",
+            // Yes Steve Model (YSM - 7.6s) & Touhou Little Maid (4.9s)
+            "com.elfmcys.yesstevemodel.YesSteveModel",
+            "com.elfmcys.yesstevemodel.oOoOO0o0ooO0oO000o0oOOoO",
             "com.github.tartaricacid.touhoulittlemaid.TouhouLittleMaid",
             // Youkais Homecoming (4.7s)
             "dev.xkmc.youkaishomecoming.init.YoukaisHomecoming",
@@ -135,13 +140,23 @@ public class ClassPreloadEngine {
             "net.minecraft.world.entity.player.Player"
     );
 
+    // 4. Goety 等の巨大 ForgeConfigSpec 先行静的ビルドウォームアップ（12.3秒のコンストラクタ停止を解消）
+    private static final List<String> CONFIG_SPEC_WARMUP_CLASSES = Arrays.asList(
+            "com.Polarice3.Goety.config.MainConfig",
+            "com.Polarice3.Goety.config.SpellConfig",
+            "com.Polarice3.Goety.config.MobsConfig",
+            "com.Polarice3.Goety.config.ItemConfig",
+            "com.Polarice3.Goety.config.BrewConfig",
+            "com.Polarice3.Goety.config.AttributesConfig"
+    );
+
     public static void startAsyncClassPreloading() {
         if (!STARTED.compareAndSet(false, true)) {
             return;
         }
         CompletableFuture.runAsync(() -> {
             long start = System.currentTimeMillis();
-            LOGGER.info("[EarlyStaticWarmup] ⚡ Launching multi-core speculative warmup for heavy mod classes...");
+            LOGGER.info("[EarlyStaticWarmup] ⚡ Launching multi-core speculative warmup for heavy mod classes & ConfigSpecs...");
 
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             if (cl == null) {
@@ -149,6 +164,7 @@ public class ClassPreloadEngine {
             }
             ClassLoader finalCl = cl;
             AtomicInteger loadedCount = new AtomicInteger(0);
+            AtomicInteger configCount = new AtomicInteger(0);
 
             // Phase 1: スクリプトエンジン・コンパイラ・基盤パーサーのクラスプリロード
             FastLaunchThreadHelper.executeParallel(ENGINE_CLASSES, className -> {
@@ -174,12 +190,21 @@ public class ClassPreloadEngine {
                 } catch (Throwable ignored) {}
             });
 
+            // Phase 4: Goety 巨大 ForgeConfigSpec の並列静的初期化 (<clinit> 先行実行)
+            FastLaunchThreadHelper.executeParallel(CONFIG_SPEC_WARMUP_CLASSES, className -> {
+                try {
+                    // initialize = true で静的イニシャライザをバックグラウンド並列実行
+                    Class.forName(className, true, finalCl);
+                    configCount.incrementAndGet();
+                } catch (Throwable ignored) {}
+            });
+
             long elapsed = Math.max(0, System.currentTimeMillis() - start);
-            LOGGER.info("[ClassPreloader] ⚡ Multi-core class bytecode warmup completed in {} ms (Loaded {} classes).",
-                    elapsed, loadedCount.get());
+            LOGGER.info("[ClassPreloader] ⚡ Multi-core class bytecode warmup completed in {} ms (Loaded {} classes, {} ConfigSpecs).",
+                    elapsed, loadedCount.get(), configCount.get());
             FastLaunchSuccessLogger.recordActiveFeature(
                     "ClassBytecodePreloader", 
-                    String.format("ACTIVE [Pre-loaded %d heavy classes in %d ms]", loadedCount.get(), elapsed)
+                    String.format("ACTIVE [Pre-loaded %d classes, %d ConfigSpecs in %d ms]", loadedCount.get(), configCount.get(), elapsed)
             );
         }, FastLaunchThreadHelper.getSharedWorkerPool());
     }

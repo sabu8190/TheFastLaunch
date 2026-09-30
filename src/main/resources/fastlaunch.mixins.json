@@ -38,7 +38,10 @@
     "FastLaunchTaczAssetDispatcherMixin",
     "TouhouLittleMaidFastReloadMixin",
     "FastLaunchWeaponMasterMixin",
-    "FastLaunchResourceManagerCacheMixin"
+    "FastLaunchResourceManagerCacheMixin",
+    "FastLaunchSpriteLoaderMixin",
+    "FastLaunchModelManagerMixin",
+    "FastLaunchSimpleReloadBarrierMixin"
   ],
   "client": [],
   "injectors": {
