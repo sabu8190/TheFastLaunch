@@ -51,7 +51,17 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
                 return;
             }
 
-            // バニラの進捗管理（preparingListeners の除外と全完了時の allPreparations.complete）を通常通りディスパッチ
+            // ホワイトリストに含まれないリスナー（Modリスナー・ModelManager・ClientModLoader等）は
+            // バニラの allPreparations バリア待ちに完全に委ねる（interferenceゼロ）
+            if (!isSafeForEarlyApply(listener)) {
+                return;
+            }
+
+            // ★ ここから先は Language/Sound/Font の3リスナーのみ到達する ★
+            //
+            // バニラの preparingListeners からこのリスナーを取り除き、
+            // 全 prepare 完了時に allPreparations を complete する
+            // （先行 apply するため vanilla の wait チェーンを使わないのでここで手動管理）
             mainThreadExecutor.execute(() -> {
                 try {
                     Field preparingField = findField(SimpleReloadInstance.class, "preparingListeners", "f_10801_");
@@ -75,13 +85,7 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
                 } catch (Throwable ignored) {}
             });
 
-            // ホワイトリストに含まれないリスナー（Modリスナー・ModelManager・ClientModLoader等）は
-            // バニラの allPreparations バリア待ちに任せる（先行 apply 禁止）
-            if (!isSafeForEarlyApply(listener)) {
-                return;
-            }
-
-            // モデル非依存リスナーは、直前のリスナーの apply 完了に直接パイプライン結合して即時 apply を開始！
+            // モデル非依存の3リスナーを直前のタスクにパイプライン結合して即時 apply
             int count = EARLY_APPLIED_COUNT.incrementAndGet();
             if (count % 30 == 0 || count == 1) {
                 LOGGER.info("[ReloadBarrier] ⚡ Pipelined early apply active for independent listener #{} ({})",
