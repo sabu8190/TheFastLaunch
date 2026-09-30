@@ -166,6 +166,19 @@ public class ClassPreloadEngine {
             AtomicInteger loadedCount = new AtomicInteger(0);
             AtomicInteger configCount = new AtomicInteger(0);
 
+            // Phase 0: YesSteveModel ネイティブコアライブラリ（DLL）の先行展開＆ロード（7.6秒のコンストラクタ停止を解消）
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Class<?> ysmHelper = Class.forName("com.elfmcys.yesstevemodel.oOoOO0o0ooO0oO000o0oOOoO", false, finalCl);
+                    java.lang.reflect.Method loadMethod = ysmHelper.getDeclaredMethod("Oo0Oo0o00O00Oo0OOoOOoooo");
+                    loadMethod.setAccessible(true);
+                    loadMethod.invoke(null);
+                    LOGGER.info("[EarlyStaticWarmup] ⚡ YesSteveModel native core library pre-extracted & loaded!");
+                } catch (Throwable t) {
+                    LOGGER.debug("[EarlyStaticWarmup] YSM native preload skipped: {}", t.getMessage());
+                }
+            }, FastLaunchThreadHelper.getSharedWorkerPool());
+
             // Phase 1: スクリプトエンジン・コンパイラ・基盤パーサーのクラスプリロード
             FastLaunchThreadHelper.executeParallel(ENGINE_CLASSES, className -> {
                 try {

@@ -42,7 +42,8 @@
     "FastLaunchSpriteLoaderMixin",
     "FastLaunchModelManagerMixin",
     "FastLaunchSimpleReloadBarrierMixin",
-    "FastLaunchSupermartijnModelGuardMixin"
+    "FastLaunchSupermartijnModelGuardMixin",
+    "FastLaunchCraftTweakerScanOptimizerMixin"
   ],
   "client": [],
   "injectors": {
