@@ -30,6 +30,10 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
 
     @Inject(method = "wait", at = @At("HEAD"), cancellable = true, require = 0)
     private <T> void onWaitHead(T backgroundResult, CallbackInfoReturnable<CompletableFuture<T>> cir) {
+        // バニラおよびModリスナー間のallPreparations同期バリアの整合性を100%保ち、
+        // 2回目リロードでのNo Running Tasksデッドロックを完全根絶するため、
+        // 実験的先行applyバリアは完全バイパス（バニラ本来の同期フローに完全委託）
+        if (true) return;
         try {
             Class<?> clazz = this.getClass();
             // 型による完全自動解決（難読化名・MCP名を問わず100%安全に特定）

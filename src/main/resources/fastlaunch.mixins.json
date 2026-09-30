@@ -41,7 +41,6 @@
     "FastLaunchResourceManagerCacheMixin",
     "FastLaunchSpriteLoaderMixin",
     "FastLaunchModelManagerMixin",
-    "FastLaunchSimpleReloadBarrierMixin",
     "FastLaunchSupermartijnModelGuardMixin",
     "FastLaunchCraftTweakerScanOptimizerMixin",
     "FastLaunchGoetyConfigOptimizerMixin",
