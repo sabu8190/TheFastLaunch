@@ -75,8 +75,9 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
                 } catch (Throwable ignored) {}
             });
 
-            // ModelManager は全テクスチャ・アトラスの同期を待つ必要があるためバニラ動作（allPreparations 待ち）に任せる
-            if (isModelDependent(listener)) {
+            // ホワイトリストに含まれないリスナー（Modリスナー・ModelManager・ClientModLoader等）は
+            // バニラの allPreparations バリア待ちに任せる（先行 apply 禁止）
+            if (!isSafeForEarlyApply(listener)) {
                 return;
             }
 
@@ -131,10 +132,17 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
         return null;
     }
 
-    private boolean isModelDependent(PreparableReloadListener listener) {
+    /**
+     * ホワイトリスト方式: バニラの純粋テキストリソース（言語・サウンド・フォント）のみ先行 apply を許可。
+     * ModelManager, ClientModLoader, 全 Mod リスナー (WrapperListener 等) は false を返し
+     * 通常の allPreparations バリア待ちを強制する。
+     */
+    private boolean isSafeForEarlyApply(PreparableReloadListener listener) {
         if (listener == null) return false;
-        String name = listener.getName().toLowerCase();
-        String className = listener.getClass().getName().toLowerCase();
-        return name.contains("model") || className.contains("modelmanager") || className.contains("modelbakery");
+        String className = listener.getClass().getName();
+        // 安全リスト: Vanilla のみ（完全クラス名で厳密判定）
+        return className.equals("net.minecraft.client.resources.language.LanguageManager")
+            || className.equals("net.minecraft.client.sounds.SoundManager")
+            || className.equals("net.minecraft.client.gui.font.FontManager");
     }
 }
