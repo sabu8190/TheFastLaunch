@@ -30,6 +30,7 @@
     "JeiForgeGuiFastBypassMixin",
     "JeiPluginCallerParallelMixin",
     "LoadRegistriesParallelDispatcherMixin",
+    "Mbd2FileUtilsMixin",
     "MemorySweepForcedKillerMixin",
     "ModelBakeryParallelWorkerMixin",
     "ResourceManagerParallelMixin",
