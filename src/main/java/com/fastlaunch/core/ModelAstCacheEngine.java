@@ -66,4 +66,17 @@ public class ModelAstCacheEngine {
             );
         }
     }
+
+    /**
+     * 起動完了後に不要となったメモリ上の未ベイク BlockModel AST キャッシュを一括解放します。
+     * @return 解放されたモデル数
+     */
+    public static int clearMemoryCache() {
+        int size = MODEL_CACHE.size();
+        if (size > 0) {
+            MODEL_CACHE.clear();
+            LOGGER.info("[ModelAstCache] 🧹 Cleared {} in-memory BlockModel AST cache entries to reclaim heap.", size);
+        }
+        return size;
+    }
 }

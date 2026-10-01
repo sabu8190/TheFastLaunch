@@ -118,10 +118,26 @@ public class PersistentModelCacheEngine {
                 double sizeMb = manifestFile.length() / (1024.0 * 1024.0);
                 LOGGER.info("[PersistentModelCache] 💾 Persisted {} models to disk in {} ms (~{:.2f} MB).", 
                         DISK_MODEL_CACHE.size(), elapsed, sizeMb);
+
+                // ディスク書き出し完了後、メモリ上の巨大な生JSON文字列マップを即時解放
+                clearMemoryCache();
             } catch (Throwable t) {
                 LOGGER.warn("[PersistentModelCache] Error persisting cache to disk: {}", t.getMessage());
             }
         });
+    }
+
+    /**
+     * メモリ上のモデル生JSONキャッシュを一括解放します。
+     * @return 解放されたJSONエントリ数
+     */
+    public static int clearMemoryCache() {
+        int size = DISK_MODEL_CACHE.size();
+        if (size > 0) {
+            DISK_MODEL_CACHE.clear();
+            LOGGER.info("[PersistentModelCache] 🧹 Cleared {} in-memory Raw JSON model cache entries to reclaim heap.", size);
+        }
+        return size;
     }
 
     private static long calculateModpackHash(File modsDir) {
