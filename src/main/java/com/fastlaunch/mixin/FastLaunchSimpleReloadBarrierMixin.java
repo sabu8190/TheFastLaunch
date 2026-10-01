@@ -156,7 +156,7 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
                 || className.contains("TextureManager") || className.contains("LevelRenderer")
                 || className.contains("EntityRenderDispatcher") || className.contains("EntityModelSet")
                 || className.contains("ItemRenderer") || className.contains("ParticleEngine")
-                || className.contains("GameRenderer")) {
+                || className.contains("GameRenderer") || className.contains("SlimeColor")) {
             return false;
         }
 
@@ -167,7 +167,7 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
             return true;
         }
 
-        // 3. 独立した Mod リソースリスナー（アニメーション、ガイド本、設定、UI）
+        // 3. 独立した Mod リソースリスナー（アニメーション、ガイド本、設定、UI、独立データキャッシュ）
         String lowerClass = className.toLowerCase();
         String lowerName = name != null ? name.toLowerCase() : "";
 
@@ -184,6 +184,10 @@ public abstract class FastLaunchSimpleReloadBarrierMixin {
                 || lowerClass.contains("chunkpregen") || lowerName.contains("chunkpregen")
                 || lowerClass.contains("ending_library") || lowerName.contains("ending_library")
                 || lowerClass.contains("polylib") || lowerName.contains("polylib")
-                || lowerClass.contains("miapi") || lowerName.contains("miapi");
+                || lowerClass.contains("miapi") || lowerName.contains("miapi")
+                || lowerClass.contains("mantle") || lowerName.contains("mantle")
+                || lowerClass.contains("tconstruct") || lowerName.contains("tconstruct")
+                || lowerClass.contains(".emi") || lowerName.contains("emi")
+                || lowerClass.contains("tacz") || lowerName.contains("tacz");
     }
 }
