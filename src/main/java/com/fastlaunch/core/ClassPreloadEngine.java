@@ -20,6 +20,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClassPreloadEngine {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/ClassPreloader");
     private static final AtomicBoolean STARTED = new AtomicBoolean(false);
+    private static volatile boolean isForgeryPresent = false;
+
+    public static void setForgeryPresent(boolean present) {
+        isForgeryPresent = present;
+    }
+
+    public static boolean isForgeryPresent() {
+        return isForgeryPresent;
+    }
 
     // 1. 純粋スクリプトエンジン・ASTパーサー・コンパイラ・基盤クラス（即時安全に <clinit> 可能）
     private static final List<String> ENGINE_CLASSES = Arrays.asList(
@@ -131,13 +140,7 @@ public class ClassPreloadEngine {
             "com.Polarice3.Goety.init.ModAttributes",
             "dev.xkmc.l2hostility.init.L2Hostility",
             "com.mega.uom.common.attribute.ModAttributes",
-            "com.mega.endinglib.common.init.ModAttributes",
-            "net.minecraft.world.entity.monster.Monster",
-            "net.minecraft.world.entity.monster.Zombie",
-            "net.minecraft.world.entity.monster.Skeleton",
-            "net.minecraft.world.entity.monster.Creeper",
-            "net.minecraft.world.entity.monster.EnderMan",
-            "net.minecraft.world.entity.player.Player"
+            "com.mega.endinglib.common.init.ModAttributes"
     );
 
     // 4. Goety 等の巨大 ForgeConfigSpec 先行静的ビルドウォームアップ（12.3秒のコンストラクタ停止を解消）
@@ -213,13 +216,17 @@ public class ClassPreloadEngine {
                 } catch (Throwable ignored) {}
             });
 
-            // Phase 3: 主要 LivingEntity & 属性付与対象クラス群の先行ロード
-            FastLaunchThreadHelper.executeParallel(LIVING_ENTITY_CLASSES, className -> {
-                try {
-                    Class.forName(className, false, finalCl);
-                    loadedCount.incrementAndGet();
-                } catch (Throwable ignored) {}
-            });
+            // Phase 3: 主要 LivingEntity & 属性付与対象クラス群の先行ロード (Forgery導入時は競合防止のため完全スキップ)
+            if (!isForgeryPresent) {
+                FastLaunchThreadHelper.executeParallel(LIVING_ENTITY_CLASSES, className -> {
+                    try {
+                        Class.forName(className, false, finalCl);
+                        loadedCount.incrementAndGet();
+                    } catch (Throwable ignored) {}
+                });
+            } else {
+                LOGGER.info("[EarlyStaticWarmup] 🛡️ Skipped LivingEntity preloading due to Forgery compatibility mode.");
+            }
 
             // Phase 4: Goety 巨大 ForgeConfigSpec の並列静的初期化 (<clinit> 先行実行)
             FastLaunchThreadHelper.executeParallel(CONFIG_SPEC_WARMUP_CLASSES, className -> {

@@ -16,6 +16,7 @@ import java.util.Set;
 public class FastLaunchMixinPlugin implements IMixinConfigPlugin {
     private static final Logger LOGGER = LogManager.getLogger("FastLaunch/MixinPlugin");
     private boolean isJustEnoughThreadsPresent = false;
+    private boolean isForgeryPresent = false;
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -41,7 +42,6 @@ public class FastLaunchMixinPlugin implements IMixinConfigPlugin {
             LOGGER.info("[FastLaunch] 🎯 Throttled Forge ModWorkManager threads: MAX_THREADS = {}", targetThreads);
         } catch (Throwable ignored) {}
 
-
         try {
             // JustEnoughThreads / jeioptimize の存在をクラスローダーで検知
             Class.forName("com.tonywww.jeioptimize.instrumentation.JeiPluginCallContext", false, getClass().getClassLoader());
@@ -54,10 +54,41 @@ public class FastLaunchMixinPlugin implements IMixinConfigPlugin {
             isJustEnoughThreadsPresent = false;
         }
 
-        // 3. 最序盤からの投機的クラス＆ConfigSpecバックグラウンド並列ウォームアップ起動
+        // 3. Forgery / Fabrication MOD の動的検知 (Issue #4 競合回避)
         try {
-            com.fastlaunch.core.ClassPreloadEngine.startAsyncClassPreloading();
-        } catch (Throwable ignored) {}
+            Class.forName("com.unascribed.fabrication.support.injection.FailsoftModifyArgInjectionInfo", false, getClass().getClassLoader());
+            isForgeryPresent = true;
+        } catch (Throwable ignored) {
+            try {
+                Class.forName("com.unascribed.fabrication.FabricationMod", false, getClass().getClassLoader());
+                isForgeryPresent = true;
+            } catch (Throwable ignored2) {
+                try {
+                    java.nio.file.Path modsDir = net.minecraftforge.fml.loading.FMLPaths.MODSDIR.get();
+                    if (modsDir != null && java.nio.file.Files.exists(modsDir)) {
+                        try (java.util.stream.Stream<java.nio.file.Path> stream = java.nio.file.Files.list(modsDir)) {
+                            isForgeryPresent = stream.anyMatch(p -> {
+                                String name = p.getFileName().toString().toLowerCase();
+                                return name.contains("forgery") || name.contains("fabrication");
+                            });
+                        }
+                    }
+                } catch (Throwable ignored3) {}
+            }
+        }
+
+        if (isForgeryPresent) {
+            LOGGER.warn("=======================================================================");
+            LOGGER.warn("[FastLaunch] ⚠️ Detected 'Forgery' (Fabrication) mod!");
+            LOGGER.warn("[FastLaunch] ⚠️ Automatically disabling early class preloading to prevent MixinEntity conflicts!");
+            LOGGER.warn("=======================================================================");
+            com.fastlaunch.core.ClassPreloadEngine.setForgeryPresent(true);
+        } else {
+            // 4. 最序盤からの投機的クラス＆ConfigSpecバックグラウンド並列ウォームアップ起動 (Forgery非導入時のみ安全に発動)
+            try {
+                com.fastlaunch.core.ClassPreloadEngine.startAsyncClassPreloading();
+            } catch (Throwable ignored) {}
+        }
     }
 
     @Override
@@ -71,6 +102,14 @@ public class FastLaunchMixinPlugin implements IMixinConfigPlugin {
         if (isJustEnoughThreadsPresent) {
             if (mixinClassName.endsWith("JeiPluginCallerParallelMixin")) {
                 LOGGER.info("[FastLaunch] ℹ️ Auto-disabled {} due to JustEnoughThreads presence.", mixinClassName);
+                return false;
+            }
+        }
+        // Forgery が存在する場合、干渉リスクのある Mixin を自動無効化
+        if (isForgeryPresent) {
+            if (mixinClassName.endsWith("FastLaunchSupermartijnModelGuardMixin") ||
+                mixinClassName.endsWith("FastLaunchSophisticatedBackpacksGuardMixin")) {
+                LOGGER.info("[FastLaunch] ℹ️ Auto-disabled {} due to Forgery compatibility mode.", mixinClassName);
                 return false;
             }
         }
