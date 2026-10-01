@@ -41,8 +41,7 @@ Windows OS は、メインスレッドが一時的にビジー状態になると
 #### 2. ⚡ JsonThings マルチコア並列パース ＆ 決定論的同期
 大量の JSON 定義を読み込む `JsonThings` のパース処理を `ForkJoinPool` で並列化。アイテムやブロックの登録順序（`builders` および `buildersByName`）を決定論的（Deterministic）に完全同期することで、マルチサーバー接続時のレジストリ不一致（Registry Desync）やパケット切断を防ぎます。
 
-#### 3. 🧩 MBD2 / SimpleJson 並列リソース処理
-* **MBD2 (Modular Block Data 2)**: 膨大な NBT ファイルや設定データの読み込みをマルチスレッド（`CompletableFuture`）で並列実行し、ディスク I/O 待機時間を短縮します。
+#### 3. 🧩 SimpleJson 並列リソース処理
 * **SimpleJson**: リソース定義のスキャン処理を並列ストリーム化し、高速化を図ります。
 
 #### 4. 📦 JAR 分離型アセット事前展開ストリーミング (`ResourceZipPreExtract`)
@@ -67,14 +66,12 @@ Tinkers' Construct などのツール系 Mod が生成する天文学的な組�
 [TheFastLaunch] [Active Modules]
 [TheFastLaunch]  - Win32 Ghost Window Prevention : ACTIVE (DisableProcessWindowsGhosting enabled)
 [TheFastLaunch]  - JsonThings Multi-Core Parser   : ACTIVE (Synchronized Deterministic)
-[TheFastLaunch]  - MBD2 Parallel NBT Loader       : ACTIVE (Async Completed)
 [TheFastLaunch]  - SimpleJson Parallel Parser     : ACTIVE (Worker Pool)
 [TheFastLaunch]  - ModelBakery Parallel Profile   : ACTIVE (Profiled 1420ms)
 [TheFastLaunch]  - JEI Forge GUI Handler          : ACTIVE (Registered)
 [TheFastLaunch] [Measured Phase Timings]
 [TheFastLaunch]  - ModelBakery Bake               : 1420 ms
 [TheFastLaunch]  - JsonThings Parsing             : 850 ms
-[TheFastLaunch]  - MBD2 NBT Load                  : 320 ms
 [TheFastLaunch]  - Startup Cache Purge            : Reclaimed 128 MB heap
 [TheFastLaunch] =======================================================================
 ```
@@ -110,8 +107,7 @@ Windows OS automatically overlays a translucent "Not Responding" ghost window wh
 #### 2. ⚡ JsonThings Multi-Core Parser with Deterministic Ordering
 Parallelizes JsonThings JSON parsing across the `ForkJoinPool`. Item and block builders (`builders` and `buildersByName`) are synchronized and deterministically ordered, preventing race conditions, ID shifts, and multiplayer connection drops (such as Tinkers' add-on item synchronization).
 
-#### 3. 🧩 MBD2 & SimpleJson Parallel Resource Loading
-* **Modular Block Data 2 (MBD2)**: Asynchronously reads heavy NBT configuration files via `CompletableFuture`, minimizing disk I/O wait times.
+#### 3. 🧩 SimpleJson Parallel Resource Loading
 * **SimpleJson**: Parallelizes JSON resource scanning across available worker threads.
 
 #### 4. 📦 Isolated Asset Pre-Extraction Streaming (`ResourceZipPreExtract`)
