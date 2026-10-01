@@ -34,20 +34,9 @@ public abstract class FastLaunchModelManagerMixin {
     private static final Object SPRITE_GETTER_LOCK = new Object();
     private static long startTime = 0;
 
-    /**
-     * ModelManager.reload の背景 Executor を FastLaunch 共有並列プールへ統一。
-     */
-    @ModifyVariable(
-            method = "reload",
-            at = @At("HEAD"),
-            argsOnly = true,
-            ordinal = 0,
-            require = 0
-    )
-    private Executor onModifyModelManagerBackgroundExecutor(Executor backgroundExecutor) {
+    @Inject(method = "reload", at = @At("HEAD"), require = 0)
+    private void onReloadHead(CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         startTime = System.currentTimeMillis();
-        LOGGER.info("[ModelManager] 🚀 Redirecting ModelManager reload pipeline (block models, blockstates, atlases) to FastLaunch Quiet Worker Pool...");
-        return FastLaunchThreadHelper.getSharedWorkerPool();
     }
 
     /**
@@ -77,14 +66,18 @@ public abstract class FastLaunchModelManagerMixin {
     private void onReloadReturn(CallbackInfoReturnable<CompletableFuture<Void>> cir) {
         CompletableFuture<Void> future = cir.getReturnValue();
         if (future != null) {
-            future.thenRun(() -> {
-                if (LOGGED.compareAndSet(false, true)) {
-                    long elapsed = Math.max(0, System.currentTimeMillis() - startTime);
-                    LOGGER.info("[ModelManager] 🎯 ModelManager async reload pipeline completed in {} ms.", elapsed);
-                    FastLaunchSuccessLogger.recordActiveFeature(
-                            "ModelManager-AsyncPipeline",
-                            String.format("ACTIVE [ModelManager reload completed in %d ms]", elapsed)
-                    );
+            future.whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    LOGGER.error("[ModelManager] ❌ Exception occurred during ModelManager reload pipeline (Silent failure prevented!): ", throwable);
+                } else {
+                    if (LOGGED.compareAndSet(false, true)) {
+                        long elapsed = Math.max(0, System.currentTimeMillis() - startTime);
+                        LOGGER.info("[ModelManager] 🎯 ModelManager async reload pipeline completed in {} ms.", elapsed);
+                        FastLaunchSuccessLogger.recordActiveFeature(
+                                "ModelManager-AsyncPipeline",
+                                String.format("ACTIVE [ModelManager reload completed in %d ms]", elapsed)
+                        );
+                    }
                 }
             });
         }

@@ -37,34 +37,57 @@ public abstract class ModelBakeryParallelWorkerMixin {
     private void onBakeModelsHead(CallbackInfo ci) {
         startTime = System.currentTimeMillis();
         try {
-            // bakedCache (f_119213_), bakedTopLevelModels (f_119215_) を含む全Mapフィールドを
-            // 難読化名・環境を問わずスレッドセーフな同期マップに昇格してデータ破損とCMEを完全根絶
+            // bakedCache (f_119213_), bakedTopLevelModels (f_119215_) などのマップを安全に検査
+            // ModernFix の DynamicBakedModelProvider や ConcurrentMap の整合性を100%保持しつつ、
+            // 非スレッドセーフな通常マップのみ同期化して ClassCastException およびデータ破損を完全根絶
             wrapAllMapFieldsSynchronized();
 
             // Forgified Fabric API (Fabric Model Loading API) のスレッド競合とガードを完全無害化
             com.fastlaunch.core.FabricModelLoadingOptimizer.secureModelBakery((ModelBakery) (Object) this);
         } catch (Throwable t) {
-            LOGGER.warn("[ModelBakeryMixin] Failed to wrap model maps for multithreading: {}", t.getMessage());
+            LOGGER.error("[ModelBakeryMixin] ❌ Failed during ModelBakery pre-bake hardening: ", t);
         }
     }
 
     private void wrapAllMapFieldsSynchronized() {
         int wrappedCount = 0;
+        int preservedCount = 0;
         for (Field f : ModelBakery.class.getDeclaredFields()) {
             try {
                 if (Map.class.isAssignableFrom(f.getType())) {
                     f.setAccessible(true);
                     Object obj = f.get(this);
-                    if (obj instanceof Map && !(obj instanceof ConcurrentHashMap)) {
-                        @SuppressWarnings("unchecked")
-                        Map<?, ?> original = (Map<?, ?>) obj;
-                        f.set(this, Collections.synchronizedMap(original));
-                        wrappedCount++;
+                    if (obj == null) continue;
+
+                    // 1. 既にスレッドセーフな ConcurrentMap (Guava Cache.asMap(), ConcurrentHashMap 等) は保持
+                    if (obj instanceof java.util.concurrent.ConcurrentMap) {
+                        preservedCount++;
+                        continue;
                     }
+
+                    // 2. ModernFix の DynamicBakedModelProvider や Mixin 生成クラス等は絶対に上書きしない
+                    //    (ModernFix の captureGetter における (DynamicBakedModelProvider) f_119215_ キャスト破壊を完全防止)
+                    String className = obj.getClass().getName();
+                    if (className.contains("DynamicBakedModelProvider")
+                            || className.contains("Synchronized")
+                            || className.contains("modernfix")
+                            || className.contains("Immutable")) {
+                        preservedCount++;
+                        continue;
+                    }
+
+                    // 3. 通常の非スレッドセーフ Map (HashMap, Object2ObjectOpenHashMap 等) のみを安全に同期ラップ
+                    @SuppressWarnings("unchecked")
+                    Map<?, ?> original = (Map<?, ?>) obj;
+                    f.set(this, Collections.synchronizedMap(original));
+                    wrappedCount++;
                 }
-            } catch (Throwable ignored) {}
+            } catch (Throwable t) {
+                LOGGER.warn("[ModelBakeryMixin] Could not inspect field {}: {}", f.getName(), t.getMessage());
+            }
         }
-        LOGGER.info("[ModelBakeryMixin] 🛡️ Wrapped {} ModelBakery map fields with Collections.synchronizedMap for multithreaded baking.", wrappedCount);
+        LOGGER.info("[ModelBakeryMixin] 🛡️ Safely synchronized {} non-thread-safe ModelBakery maps (preserved {} thread-safe/ModernFix maps).", 
+                wrappedCount, preservedCount);
     }
 
     @Redirect(
