@@ -1,0 +1,87 @@
+plugins {
+    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'maven-publish'
+}
+
+version = 'b1.9.1-fabric-1.21.1'
+group = 'com.fastlaunch'
+archivesBaseName = 'TheFastLaunch'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.fabricmc.net/' }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:1.21.1"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:0.16.5"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', '../fabric/src/main/java', '../src/main/java']
+            exclude 'com/fastlaunch/FastLaunchForgeMod.java'
+            exclude 'com/fastlaunch/platform/forge/**'
+            exclude 'com/fastlaunch/mixin/*Forge*'
+            exclude 'com/fastlaunch/mixin/FastLaunchCraftTweakerScanOptimizerMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchGoetyConfigOptimizerMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchSophisticatedBackpacksGuardMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchThing*'
+            exclude 'com/fastlaunch/mixin/FastLaunchCreate*'
+            exclude 'com/fastlaunch/mixin/FastLaunchLdLib*'
+            exclude 'com/fastlaunch/mixin/FastLaunchMek*'
+            exclude 'com/fastlaunch/mixin/FastLaunchObjectHolderMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchWeaponMasterMixin.java'
+            exclude 'com/fastlaunch/mixin/LoadRegistriesParallelDispatcherMixin.java'
+            exclude 'com/fastlaunch/mixin/Mbd2FileUtilsMixin.java'
+            exclude 'com/fastlaunch/mixin/TouhouLittleMaidFastReloadMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchSupermartijnModelGuardMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchCatnipStitchedSpriteGuardMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchTaczAssetDispatcherMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchCreativeTabMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchJemi*'
+            exclude 'com/fastlaunch/mixin/FastLaunchArcaneAnvilOptimizerMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchBrewingRecipeIndexMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchTinkersJeiPrefilterMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchPathPackResourcesFixMixin.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchLanguageSyncMixin.java'
+            exclude 'com/fastlaunch/core/FastLaunchCreativeTabCacheEngine.java'
+            exclude 'com/fastlaunch/core/FastLaunchEntityAttributeCacheEngine.java'
+            exclude 'com/fastlaunch/core/FastLaunchTitleScreenNotifier.java'
+            exclude 'com/fastlaunch/core/FastLaunchObjectHolderCacheEngine.java'
+            exclude 'com/fastlaunch/core/FastLaunchTranslationSyncBridge.java'
+            exclude 'com/fastlaunch/core/ClassPreloadEngine.java'
+            exclude 'com/fastlaunch/core/ResourceZipPreExtractCacheEngine.java'
+            exclude 'com/fastlaunch/core/RegistrySnapshotCacheEngine.java'
+            exclude 'com/fastlaunch/core/JsonThingsCacheEngine.java'
+            exclude 'com/fastlaunch/mixin/FastLaunchMixinPlugin.java'
+            exclude 'com/fastlaunch/mixin/FilePackResourcesDirectReadMixin.java'
+            exclude 'com/fastlaunch/client/gui/**'
+            exclude 'com/fastlaunch/service/**'
+        }
+    }
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 21
+}
+
+java {
+    withSourcesJar()
+}

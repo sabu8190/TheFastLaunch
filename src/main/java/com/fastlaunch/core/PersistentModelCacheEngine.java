@@ -59,9 +59,11 @@ public class PersistentModelCacheEngine {
                             String rawJson = in.readUTF();
                             DISK_MODEL_CACHE.put(locStr, rawJson);
                             try {
-                                ResourceLocation loc = new ResourceLocation(locStr);
-                                BlockModel model = BlockModel.fromString(rawJson);
-                                ModelAstCacheEngine.putCachedModel(loc, model);
+                                ResourceLocation loc = ResourceLocation.tryParse(locStr);
+                                if (loc != null) {
+                                    BlockModel model = BlockModel.fromString(rawJson);
+                                    ModelAstCacheEngine.putCachedModel(loc, model);
+                                }
                             } catch (Throwable ignored) {}
                         }
                         CACHE_VALID = true;

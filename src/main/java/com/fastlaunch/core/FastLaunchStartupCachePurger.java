@@ -17,7 +17,7 @@ public class FastLaunchStartupCachePurger {
             int purgedItems = 0;
 
             // 1. クライアント環境限定: ModelManager ハイブリッドキャッシュ（45,000+ 個の未ベイク BlockModel AST & 生JSON）の完全解放
-            if (net.minecraftforge.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (com.fastlaunch.platform.Services.PLATFORM.isClient()) {
                 purgedItems += ModelAstCacheEngine.clearMemoryCache();
                 purgedItems += PersistentModelCacheEngine.clearMemoryCache();
             }
