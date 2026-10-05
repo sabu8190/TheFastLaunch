@@ -23,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -85,22 +86,8 @@ public abstract class FastLaunchThingResourceManagerMixin {
 
             for (PackResources pack : selectedPacks) {
                 try {
-                    Set<String> namespaces = pack.getNamespaces(CustomPackType.THINGS);
-                    if (namespaces != null && !namespaces.isEmpty()) {
-                        boolean hasRealThings = false;
-                        for (String ns : namespaces) {
-                            final boolean[] found = new boolean[]{false};
-                            pack.listResources(CustomPackType.THINGS, ns, "", (loc, ioSupplier) -> {
-                                found[0] = true;
-                            });
-                            if (found[0]) {
-                                hasRealThings = true;
-                                break;
-                            }
-                        }
-                        if (hasRealThings) {
-                            packsWithThings.add(pack);
-                        }
+                    if (hasThingsResources(pack)) {
+                        packsWithThings.add(pack);
                     }
                 } catch (Throwable ignored) {}
             }
@@ -199,5 +186,64 @@ public abstract class FastLaunchThingResourceManagerMixin {
         } catch (Throwable e) {
             return 0L;
         }
+    }
+
+    private static boolean hasThingsResources(PackResources pack) {
+        if (pack == null) return false;
+        try {
+            // 1. Forge DelegatingPackResources (Mod パックのラッパー)
+            if (pack instanceof net.minecraftforge.resource.DelegatingPackResources) {
+                net.minecraftforge.resource.DelegatingPackResources delegating = (net.minecraftforge.resource.DelegatingPackResources) pack;
+                java.util.Collection<PackResources> children = delegating.getChildren();
+                if (children != null) {
+                    for (PackResources child : children) {
+                        if (hasThingsResources(child)) return true;
+                    }
+                }
+                return false;
+            }
+
+            // 2. Forge PathPackResources (個別 Mod ファイル / ディレクトリ)
+            if (pack instanceof net.minecraftforge.resource.PathPackResources) {
+                net.minecraftforge.resource.PathPackResources pathPack = (net.minecraftforge.resource.PathPackResources) pack;
+                Path source = pathPack.getSource();
+                if (source != null) {
+                    Path thingsDir = source.resolve("things");
+                    return Files.isDirectory(thingsDir);
+                }
+                return false;
+            }
+
+            // 3. バニラ PathPackResources (ディレクトリパック)
+            if (pack instanceof net.minecraft.server.packs.PathPackResources) {
+                try {
+                    java.lang.reflect.Field rootField = net.minecraft.server.packs.PathPackResources.class.getDeclaredField("root");
+                    rootField.setAccessible(true);
+                    Path root = (Path) rootField.get(pack);
+                    if (root != null) {
+                        return Files.isDirectory(root.resolve("things"));
+                    }
+                } catch (Throwable ignored) {}
+            }
+
+            // 4. バニラ FilePackResources (ZIP / JAR パック)
+            if (pack instanceof net.minecraft.server.packs.FilePackResources) {
+                try {
+                    java.lang.reflect.Field fileField = net.minecraft.server.packs.FilePackResources.class.getDeclaredField("file");
+                    fileField.setAccessible(true);
+                    File file = (File) fileField.get(pack);
+                    if (file != null && file.exists()) {
+                        try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(file)) {
+                            return zip.getEntry("things/") != null || zip.getEntry("things") != null;
+                        }
+                    }
+                } catch (Throwable ignored) {}
+            }
+
+            // 5. 一般フォールバック: DelegatingPackResources 以外であれば getNamespaces は安全に判定可能
+            Set<String> ns = pack.getNamespaces(CustomPackType.THINGS);
+            return ns != null && !ns.isEmpty();
+        } catch (Throwable ignored) {}
+        return false;
     }
 }
