@@ -87,9 +87,9 @@ java {
 tasks.register('deployToInstance', Copy) {
     dependsOn remapJar
     from remapJar.archiveFile
-    into file('D:/Minecraft/GDLauncher/instances/Prominence™ II Hasturian Erav v4.1.2.zip/instance/mods')
+    into file('D:/Minecraft/GDLauncher/instances/DarkRPG Fabric-9.0.7.zip/instance/mods')
     doFirst {
-        def targetDir = file('D:/Minecraft/GDLauncher/instances/Prominence™ II Hasturian Erav v4.1.2.zip/instance/mods')
+        def targetDir = file('D:/Minecraft/GDLauncher/instances/DarkRPG Fabric-9.0.7.zip/instance/mods')
         if (targetDir.exists()) {
             targetDir.listFiles()?.each { f ->
                 if (f.name.toLowerCase().contains("fastlaunch") && f.name.endsWith(".jar")) {
@@ -100,4 +100,5 @@ tasks.register('deployToInstance', Copy) {
     }
 }
 build.finalizedBy(deployToInstance)
+
 

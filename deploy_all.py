@@ -21,7 +21,7 @@ PROJECTS = [
         "dir": os.path.join(ROOT, "fabric"),
         "jar_path": os.path.join(ROOT, "fabric", "build", "libs", "TheFastLaunch-b1.9.1-fabric-1.20.1.jar"),
         "dist_name": "TheFastLaunch-b1.9.1-fabric-1.20.1.jar",
-        "instance_mods": r"D:\Minecraft\GDLauncher\instances\Prominence™ II Hasturian Erav v4.1.2.zip\instance\mods"
+        "instance_mods": r"D:\Minecraft\GDLauncher\instances\DarkRPG Fabric-9.0.7.zip\instance\mods"
     },
     {
         "name": "Fabric 1.21.1",
