@@ -14,7 +14,7 @@ PROJECTS = [
         "dir": ROOT,
         "jar_path": os.path.join(ROOT, "build", "libs", "TheFastLaunch-b1.9.1-forge-1.20.1.jar"),
         "dist_name": "TheFastLaunch-b1.9.1-forge-1.20.1.jar",
-        "instance_mods": None # Forge 1.20.1 standard instance if needed
+        "instance_mods": r"D:\Minecraft\GDLauncher\instances\The Eternal World of Fantasy-Tale of the End--0.b5.2.zip\instance\mods"
     },
     {
         "name": "Fabric 1.20.1",
