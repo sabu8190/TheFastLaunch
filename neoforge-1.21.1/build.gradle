@@ -71,3 +71,20 @@ sourceSets {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
 }
+
+tasks.register('deployToInstance', Copy) {
+    dependsOn jar
+    from jar.archiveFile
+    into file('D:/Minecraft/GDLauncher/instances/Vagrant Saga-1.2.0.zip/instance/mods')
+    doFirst {
+        def targetDir = file('D:/Minecraft/GDLauncher/instances/Vagrant Saga-1.2.0.zip/instance/mods')
+        if (targetDir.exists()) {
+            targetDir.listFiles()?.each { f ->
+                if (f.name.toLowerCase().contains("fastlaunch") && f.name.endsWith(".jar")) {
+                    f.delete()
+                }
+            }
+        }
+    }
+}
+build.finalizedBy(deployToInstance)
