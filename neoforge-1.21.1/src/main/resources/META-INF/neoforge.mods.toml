@@ -4,7 +4,7 @@ license="MIT"
 
 [[mods]]
 modId="fastlaunch"
-version="b1.9.1"
+version="1.9.1"
 displayName="TheFastLaunch"
 authors="sabu"
 description='''

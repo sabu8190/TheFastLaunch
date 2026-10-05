@@ -4,7 +4,7 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.148'
 }
 
-version = 'b1.9.1-neoforge-1.21.1'
+version = '1.9.1'
 group = 'com.fastlaunch'
 archivesBaseName = 'TheFastLaunch'
 
@@ -70,6 +70,10 @@ sourceSets {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
+}
+
+jar {
+    archiveFileName = 'TheFastLaunch-b1.9.1-neoforge-1.21.1.jar'
 }
 
 tasks.register('deployToInstance', Copy) {
